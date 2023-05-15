@@ -15,14 +15,14 @@ sim.agent<-function(cfg){
   w2  = cfg$w2
   
   df=data.frame()
-  
+  count_action=rep(0,Nactions)
   for (subject in 1:Nsubjects){
     values=rep(0,Nactions)
     for (trial in 1:Ntrials){
       #players choice
-      p         = exp(beta*(values + cost_action)) / sum(exp(beta*(values + cost_action)))
+      p         = exp(beta*(values - cost_action*count_action)) / sum(exp(beta*(values - cost_action*count_action)))
       choice    = sample(1:Nactions,1,prob=p)
-      
+      count_action[choice]=count_action[choice]+1 
       #outcome 
       outcome = sample(valence,1,prob=frequency_outcome)
 
@@ -33,16 +33,12 @@ sim.agent<-function(cfg){
         subject              = subject,
         trial                = trial,
         choice               = choice,
-        cost1                = cost_action[1],
-        cost2                = cost_action[2],
-        cost3                = cost_action[3],
-        cost4                = cost_action[4],
+        cost1                = cost_action[1]*count_action[1],
+        cost2                = cost_action[2]*count_action[2],
         outcome              = outcome,
         value_ch             = values[choice],
         value1               = values[1],
         value2               = values[2],
-        value3               = values[3],
-        value4               = values[4],
         w1                   = w1,
         w2                   = w2,
         aspiration_level     = aspiration_level[trial,]
@@ -51,7 +47,7 @@ sim.agent<-function(cfg){
       df=rbind(df,dfnew)
       
       #update values
-      subjective_outcome = w1*outcome+w2*(outcome-aspiration_level[trial,])
+      subjective_outcome = outcome-aspiration_level[trial,]
       PE = subjective_outcome - values[choice]
       values[choice] = values[choice] + alpha*(PE)
     }
