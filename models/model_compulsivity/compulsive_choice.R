@@ -25,4 +25,5 @@ cfg$anxiety[1] = 100
 source('models/model_compulsivity/sim_agent.R')
 source('models/model_compulsivity/plot.R')
 df = sim.agent(cfg) #run function
+df=df%>%mutate(flag=state==lag(state))
 plot_df(cfg,df,number_of_trials_to_look_on=1000) #plot
