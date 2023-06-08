@@ -16,10 +16,8 @@ cfg=list(
 
   #set parameters
   alpha = 0.3,
-  beta  = 4,
-  w1    =0,
-  w2    =1 #the agent's learning is totally depending on subjective reward (comparing it to anxiety level)
-)
+  beta  = 4
+  )
 
 cfg$anxiety[1] = 100
 source('models/model_compulsivity/sim_agent.R')

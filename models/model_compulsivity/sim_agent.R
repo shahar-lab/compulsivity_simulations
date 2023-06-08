@@ -13,14 +13,22 @@ sim.agent<-function(cfg){
   #set parameters
   alpha = cfg$alpha
   beta  = cfg$beta
-  w1 = cfg$w1
-  w2  = cfg$w2
   
   df=data.frame()
   count_action=matrix(0,Nstates,Nactions)
   for (subject in 1:Nsubjects){
     values=matrix(0,Nstates,Nactions)
     for (trial in 1:Ntrials){
+      if (anxiety[trial]>cutoff_anxiety){
+        state=1
+        w2=1
+        w1=0
+      }
+      else{
+        state=2
+        w1=1
+        w2=0
+      }
       #players action
       p         = exp(beta*(values[state,] - cost_action[state,]*count_action[state,])) / sum(exp(beta*(values[state,] - cost_action[state,]*count_action[state,])))
       action    = sample(1:Nactions,1,prob=p)
@@ -40,26 +48,15 @@ sim.agent<-function(cfg){
         cost2                = cost_action[state,2]*count_action[state,2],
         outcome              = outcome,
         value_ch             = values[state,action],
-        w1                   = w1,
-        w2                   = w2,
+        value1               = values[state,1],
+        value2               = values[state,2],
+        value3               = values[state,3],
+        value4               = values[state,4],
+        value5               = values[state,5],
         anxiety              = anxiety[trial]
       )
       
       df=rbind(df,dfnew)
-      
-      #update values
-      aspiration_level = anxiety*-1
-      if (anxiety[trial]>cutoff_anxiety){
-        state=1
-        subjective_outcome = outcome-aspiration_level[trial] #The agent uses a subjective outcome instead of the objective one.
-        PE = subjective_outcome - values[state,action]
-      }
-      else{
-        PE = outcome - values[state,action]
-        state=2
-      }
-      
-      values[state,action] = values[state,action] + alpha*(PE)
       
       #update anxiety
       anxiety[trial+1] = anxiety[trial]-runif(1,0,2) #anxiety just randomly decreases
@@ -67,6 +64,16 @@ sim.agent<-function(cfg){
       if (trial%%100==0){
         anxiety[trial+1]=anxiety[trial+1]+100
       }
+      
+      #update values
+      aspiration_level = anxiety*-1
+      compare = outcome-aspiration_level[trial] #The agent uses a subjective outcome instead of the objective one.
+      objective = outcome
+      PE = w1*objective+w2*compare - values[state,action]
+      
+      values[state,action] = values[state,action] + alpha*(PE)
+      
+      
     }
   }
   return(df)
