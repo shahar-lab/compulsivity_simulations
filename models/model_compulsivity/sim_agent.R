@@ -12,7 +12,7 @@ sim.agent<-function(cfg){
   cost_action       = cfg$cost_action
   #set parameters
   alpha = cfg$alpha
-  beta  = cfg$beta
+  omega  = cfg$omega
   
   df=data.frame()
   count_action=matrix(0,Nstates,Nactions)
@@ -20,17 +20,17 @@ sim.agent<-function(cfg){
     values=matrix(0,Nstates,Nactions)
     for (trial in 1:Ntrials){
       if (anxiety[trial]>cutoff_anxiety){
-        state=1
-        w2=1
-        w1=0
+        state=1 #high
+        eta2=1
+        eta1=0
       }
       else{
         state=2
-        w1=1
-        w2=0
+        eta1=1
+        eta2=0
       }
       #players action
-      p         = exp(beta*(values[state,] - cost_action[state,]*count_action[state,])) / sum(exp(beta*(values[state,] - cost_action[state,]*count_action[state,])))
+      p         = exp(omega[state]*(values[state,] - cost_action[state,]*count_action[state,])) / sum(exp(omega[state]*(values[state,] - cost_action[state,]*count_action[state,])))
       action    = sample(1:Nactions,1,prob=p)
       count_action[state,action]=count_action[state,action]+1 #we count how many times an action is repeated and it increases it's effective cost.
       #outcome 
@@ -62,14 +62,14 @@ sim.agent<-function(cfg){
       anxiety[trial+1] = anxiety[trial]-runif(1,0,2) #anxiety just randomly decreases
       anxiety[trial+1]=max(anxiety[trial+1],0)
       if (trial%%100==0){
-        anxiety[trial+1]=100
+        anxiety[trial+1]=100 #comment this to remove triggers
       }
       
       #update values
       aspiration_level = anxiety*-1
       compare = outcome-aspiration_level[trial] #The agent uses a subjective outcome instead of the objective one.
       objective = outcome
-      PE = w1*objective+w2*compare - values[state,action]
+      PE = eta1*objective+eta2*compare - values[state,action]
       
       values[state,action] = values[state,action] + alpha*(PE)
       
