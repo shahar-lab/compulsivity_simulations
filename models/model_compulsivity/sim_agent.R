@@ -62,7 +62,7 @@ sim.agent<-function(cfg){
       anxiety[trial+1] = anxiety[trial]-runif(1,0,2) #anxiety just randomly decreases
       anxiety[trial+1]=max(anxiety[trial+1],0)
       if (trial%%100==0){
-        anxiety[trial+1]=anxiety[trial+1]+100
+        anxiety[trial+1]=100
       }
       
       #update values
