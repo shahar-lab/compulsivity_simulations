@@ -18,11 +18,13 @@ sim.agent<-function(subject,cfg){
   #set parameters
   alpha = cfg$alpha
   count_decay  = cfg$count_decay #this defines whether non-punishment reinforcing will occur.
+  #Maya - omega initialization
   
   df=data.frame()
   count_action=rep(0,Nactions)
-    condition=subject
-    valence[3]=valence_catastrophe[condition]
+    condition=subject #Maya - what does condition represent?
+    valence[3]=valence_catastrophe[condition] #Maya - why can't the subject's subjective outcome (internal experience)
+    # be negative? maybe we should sample the valence each time from a normal dist. with location=valence_catastrophe[condition]?
     values=matrix(0,Nstates,Nactions)
     count_repeat=0
     for (trial in 1:Ntrials){
@@ -54,7 +56,7 @@ sim.agent<-function(subject,cfg){
       action    = sample(1:Nactions,1,prob=p)
 
       count_action[action]=count_action[action]+1 #we count how many times an action is repeated and it increases it's effective cost.
-      count_action[-action]=count_action[-action]*exp(-count_decay)
+      count_action[-action]=count_action[-action]*exp(-count_decay) #Maya - what does "-action" stand for?
       #outcome 
       outcome = sample(valence,1,prob=c(frequency_outcome[action],1-frequency_outcome[action]-frequency_catastrophe,frequency_catastrophe))
 
@@ -68,7 +70,7 @@ sim.agent<-function(subject,cfg){
         action               = action,
         cost_action          = cost_action,
         cost_treatment       = cost_treatment,
-        total_cost_previous= if(previous_action == 0) 0 else cost[previous_action],
+        total_cost_previous= if(previous_action == 0) 0 else cost[previous_action], #Maya - why are we saving the previous action's cost?
         total_cost_current = cost[action],
         count_repeat         = count_repeat,
         treatment            = treatment,
