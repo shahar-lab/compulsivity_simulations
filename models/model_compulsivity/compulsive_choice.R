@@ -19,7 +19,7 @@ cfg=list(
   frequency_outcome = sapply(1:Nactions, function(x) sample(probs, 1)), #this are the probabilities of the objective outcome
   cost_action       = 0.1, # this is a general cost value for doing an action that will be multiplied by the number of repeated actions
   count_decay       = 0.005, # the action counter decays each time the agent does not choose a certain action
-  trigger_frequency = 100, #this determins how often a trigger will happen
+  trigger_frequency = 100, #this determines how often a trigger will happen
   trigger_strength  = 1, # when a trigger occurs, this defines how high would the internal catastrophe expectancy become
   relax_rate        = 0.03, #following a trigger the agent slowly calms down
   

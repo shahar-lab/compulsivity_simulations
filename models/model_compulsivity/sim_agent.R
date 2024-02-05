@@ -15,6 +15,8 @@ sim.agent<-function(subject,cfg){
   cost_action       = cfg$cost_action
   valence_catastrophe=cfg$valence_catastrophe
   frequency_catastrophe = cfg$frequency_catastrophe
+  trigger_frequency = cfg$trigger_frequency
+  trigger_strength= cfg$trigger_strength
   #set parameters
   alpha = cfg$alpha
   count_decay  = cfg$count_decay 
@@ -22,12 +24,8 @@ sim.agent<-function(subject,cfg){
   
   df=data.frame()
   count_action=rep(0,Nactions) #counter of how many times each action was repeated
-    condition=subject #Maya - what does condition represent? Ido - it represented different an example with different valence catastrophes
-    valence[3]=valence_catastrophe[condition] #Maya - why can't the subject's subjective outcome (internal experience)
-    # be negative? maybe we should sample the valence each time from a normal dist. with location=valence_catastrophe[condition]?
-    #Ido - it is negative, you mean why can't it be positive? basically because then then it won't be a catastrophe but a positive event.
-    # We use valence_catastrophe as a fixed estimation of "how bad the catastrophe is?" with that not being changed across time.
-    # It is just the internal expectancy of that happening that is changing.
+    condition=subject 
+    valence[3]=valence_catastrophe[condition] 
     values=matrix(0,Nstates,Nactions) #the agent learns values in an internal-state dependent manner. 
     count_repeat=0 #the number of times the agent repeated a certain action is tracked to know if treatment should start
     
@@ -62,7 +60,8 @@ sim.agent<-function(subject,cfg){
       previous_action=0
       }
       action    = sample(1:Nactions,1,prob=p)
-
+      
+      #change count action to be state-dependent and change relax rate to be based on that
       count_action[action]=count_action[action]+1 #we count how many times an action is repeated and it increases it's effective cost.
       count_action[-action]=count_action[-action]*exp(-count_decay) #the counter for all unchosen actions are decayed to reduce the cost for them.
       #outcome sampling
@@ -79,8 +78,8 @@ sim.agent<-function(subject,cfg){
         action               = action,
         cost_action          = cost_action,
         cost_treatment       = cost_treatment,
-        total_cost_previous= if(previous_action == 0) 0 else cost[previous_action], #Maya - why are we saving the previous action's cost?
-        total_cost_current = cost[action],
+        total_cost_previous  = if(previous_action == 0) 0 else cost[previous_action], 
+        total_cost_current   = cost[action],
         count_repeat         = count_repeat,
         treatment            = treatment,
         objective            = outcome,
@@ -95,7 +94,7 @@ sim.agent<-function(subject,cfg){
         value8               = values[state,8],
         value9               = values[state,9],
         value10              = values[state,10],
-        harm_exp              = harm_exp[trial],
+        harm_exp             = harm_exp[trial],
         condition            = condition,
         frequency_catastrophe= frequency_catastrophe,
         p_harm               = p_harm[trial],
@@ -129,7 +128,7 @@ sim.agent<-function(subject,cfg){
       
       PE = reward_function - values[state,action] #the integration of objective and subjective outcomes are used for prediction_error calculation
       
-      values[state,action] = values[state,action] + alpha*(PE) #value updating occurrs normally
+      values[state,action] = values[state,action] + alpha*(PE) #value updating occurs normally
       
   }
   return(df)
