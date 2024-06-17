@@ -1,4 +1,4 @@
-rm(list=ls())
+#rm(list=ls())
 library(ggplot2)
 library(gridExtra) # for arranging plots
 library(dplyr)
@@ -6,7 +6,7 @@ library(tidyr)
 library(reshape2)
 
 #load data (should also load cfg from compulsive_choice file)
-load("data/df_freq.rdata")
+#load("data/df_freq.rdata")
 
 #calculate when state shifts had happened
 block_change=df%>%mutate(block_change = state != lag(state, default = first(state)))%>%pull(block_change)
@@ -25,8 +25,8 @@ harm_expectancy_plot=df %>%
   theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 14)) +
   theme(plot.title.position = "plot",
         plot.title = element_text(face = "bold", margin = margin(10, 0, 10, 0), size = 14, color = "black")) +
-  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = cfg$cutoff_harm_exp), fill = "lightgray", alpha = 0.5) +
-  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = Inf, ymax = cfg$cutoff_harm_exp), fill = "darkgray", alpha = 0.5) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = cfg$cutoff_harm_exp), fill = "darkgray", alpha = 0.5) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = Inf, ymax = cfg$cutoff_harm_exp), fill = "lightgray", alpha = 0.5) +
   geom_line(aes(x = 1:nrow(df), y = harm_exp[1:nrow(df)]), color = "steelblue", size = 1.5) +
   geom_hline(yintercept = cfg$cutoff_harm_exp, linetype = "dashed", color = "darkorange", size = 1.5) +
   scale_x_continuous(breaks = seq(0, nrow(df), 100)) +
@@ -98,8 +98,7 @@ heatmap_plot <- ggplot(full_df, aes(x = block, y = action, fill = percentage)) +
 print(heatmap_plot)
 
 
-
-# OLD catasrophe_plot
+# old catasrophe_plot
 # catastrophe_data <- df %>%
 #   filter(catastrophe == 1) %>%
 #   select(trial,action)
