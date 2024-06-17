@@ -22,7 +22,7 @@ cfg=list(
   # betas = matrix(1,Nactions,Nstates) #scaling updates for action preferences by self-controllability
 )
 #cfg$betas[1,1]=0
-source('models/model_compulsivity/try_original_adv.R')
+source('models/model_compulsivity/advantage_actor_critic.R')
 df=data.frame()
 for (subject in 1:Nsubjects) {
   df=rbind(df, sim.agent(subject,cfg) )
