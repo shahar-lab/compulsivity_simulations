@@ -13,13 +13,13 @@ plot_action_proportions <- function(data, include_p1 = TRUE) {
   
   p1 <- data %>%
     ggplot(aes(x = trial, y = p_harm)) +
-    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0, ymax = 0.05, fill = "Calm"), alpha = 1) +
-    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0.05, ymax = 1, fill = "Anxious"), alpha = 1) +
+    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
+    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
     geom_line(color = "black", size = 1) +
-    scale_fill_manual(values = c("Calm" = "deepskyblue", "Anxious" = "coral1")) +
+    scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
     theme_classic() +
     scale_x_continuous(breaks = seq(0, 1000, by = 100))+
-    labs(x = "Trial Number", y = "P(harm)", fill = "State") 
+    labs(x = "Time step", y = "P(harm)", fill = "State") 
   
   # Plot for p2
   p2 <- data %>%

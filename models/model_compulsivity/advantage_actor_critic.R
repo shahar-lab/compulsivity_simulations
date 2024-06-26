@@ -7,7 +7,6 @@ sim.agent<-function(subject,cfg){
   v_harm   = cfg$v_harm
   cutoff   = cfg$cutoff
   #set parameters
-  alpha = cfg$alpha #state learning rate - relax rate
   eta   = cfg$eta   #action learning rate environmental controllability estimation
   natural_relax_rate = cfg$natural_relax_rate
   trigger_frequency = cfg$trigger_frequency
@@ -47,7 +46,6 @@ sim.agent<-function(subject,cfg){
       v_harm               = v_harm,
       state_value          = state_value[state],
       thetas               = thetas[action,state],
-      alpha                = alpha,
       eta                  = eta,
       natural_relax_rate   = natural_relax_rate
       #,betas                = betas[action,state]
@@ -63,13 +61,14 @@ sim.agent<-function(subject,cfg){
     #eta is environmental controllability and betas are self-control for the specific chosen action.
     
     #update p_harm
-    if(trial%%trigger_frequency==0){ 
-      p_harm=p_harm+trigger_strength #add trigger effect
-      p_harm=1/(1+exp(-p_harm)) #bound p_harm between 0 and 1
+    if(trial%%trigger_frequency==0){
+      trigger=trigger_strength
     }
     else{
-      p_harm=p_harm*natural_relax_rate
+      trigger=0
     }
+    h=h+trigger-natural_relax_rate*thetas(action,state)
+    p_harm=1/(1+exp(-h))
   }
   return(df)
 }
