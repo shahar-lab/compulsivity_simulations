@@ -16,8 +16,8 @@ cfg=list(
   #set parameters
   alpha = 0.3, #updates for state values
   eta = 0.3, #updates for action preferences
-  natural_relax_rate = 0.95,
-  trigger_strength = 1,
+  natural_relax_rate = 0.08,
+  trigger_strength = 8,
   trigger_frequency = 100
   # betas = matrix(1,Nactions,Nstates) #scaling updates for action preferences by self-controllability
 )
@@ -27,5 +27,5 @@ df=data.frame()
 for (subject in 1:Nsubjects) {
   df=rbind(df, sim.agent(subject,cfg) )
 }
-save(df,file="data/df_advantage.rdata")
+save(df,file="data/df_advantage_new_model.rdata")
 

@@ -17,6 +17,8 @@ sim.agent<-function(subject,cfg){
   df=data.frame()
   state_value=rep(0,Nstates) #critic
   thetas=matrix(0,Nactions,Nstates) #actor
+  h=trigger_strength/2
+  
   for (trial in 1:Ntrials){
     
     if(p_harm<=cutoff){
@@ -60,9 +62,10 @@ sim.agent<-function(subject,cfg){
     thetas[action,state]=thetas[action,state]+eta*gradient*advantage 
     #eta is environmental controllability and betas are self-control for the specific chosen action.
     
+    #update p_harm
     if(trial%%trigger_frequency==0){ 
-      p_harm=trigger_strength
-      
+      p_harm=p_harm+trigger_strength #add trigger effect
+      p_harm=1/(1+exp(-p_harm)) #bound p_harm between 0 and 1
     }
     else{
       p_harm=p_harm*natural_relax_rate

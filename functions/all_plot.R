@@ -22,7 +22,7 @@ plot_action_proportions <- function(data, include_p1 = TRUE) {
     labs(x = "Trial Number", y = "P(harm)", fill = "State") 
   
   # Plot for p2
-  p2 <- df %>%
+  p2 <- data %>%
     filter(state == 2) %>%
     group_by(action) %>%
     summarise(count = n()) %>%
@@ -38,7 +38,7 @@ plot_action_proportions <- function(data, include_p1 = TRUE) {
   all_actions <- data.frame(action = factor(1:10))
   
   # Calculate the counts of actions where state == 1
-  action_counts_state1 <- df %>%
+  action_counts_state1 <- data %>%
     filter(state == 1) %>%
     group_by(action) %>%
     summarise(count = n()) %>%
