@@ -9,7 +9,8 @@ source('Exp1/visualization/plot_action_proportions.R')
 
 cfg = list(
   Nsubjects = 1,
-  Ntrials   = 500,
+  Nperiods  = 1,
+  Ntimesteps= 500,
   Nstates   = 2,
   Nactions  = 10,
   v_harm    = -100,
@@ -20,8 +21,10 @@ cfg = list(
   freq_c = 0,
   pr     = 0,
   f_p    = 0,
-  betas  = matrix(1, nrow = 10, ncol = 2) #Nactions, Nstates
+  treatment = "before"
 )
+cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
+cfg$beta_wait=rep(1,cfg$Nsubjects)
 
 #High eta
 cfg$eta = 0.1
