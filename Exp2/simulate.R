@@ -2,7 +2,6 @@
 
 rm(list = ls())
 library(tidyverse)
-library(extraDistr)
 source('model/advantage_actor_critic.R')
 source('Exp2/visualization/compare_repetitions.R')
 
@@ -10,7 +9,8 @@ source('Exp2/visualization/compare_repetitions.R')
 
 cfg = list(
   Nsubjects = 100,
-  Ntrials   = 500,
+  Nperiods  = 1,
+  Ntimesteps= 500,
   Nstates   = 2,
   Nactions  = 10,
   cutoff    = 0.05,
@@ -19,14 +19,17 @@ cfg = list(
   trigger_strength   = 5,
   eta    = 0.1,
   f_p    = 0.01,
-  betas  = matrix(1, nrow = 10, ncol = 2) #Nactions, Nstates
+  treatment = "before"
 )
 
 #Baseline
 df1=data.frame()
+cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
+cfg$beta_wait=rep(1,cfg$Nsubjects)
 cfg$v_harm =rnorm(cfg$Nsubjects,-100,5)
 cfg$freq_c =rbeta(cfg$Nsubjects,1,1000)
 cfg$pr     =rnorm(cfg$Nsubjects,0.02,0.05)
+
 for (subject in 1:cfg$Nsubjects){
 df1 = rbind(df1,sim.agent(subject, cfg))
 }
