@@ -17,7 +17,7 @@ The agent exists in a 2-state environment (safe / dangerous) defined by an inter
 | `betas` | Self-control matrix (states × actions) — scales action preference updates per action |
 | `v_harm` | Valence of the negative outcome |
 | `freq_c` | Probability of a negative outcome occurring at each timestep |
-| `pr` | Repetition (perseveration) cost per action — higher values make an action more likely to be repeated |
+| `pr` | Repetition (perseveration) cost per action — higher values make an action less likely to be repeated |
 | `f_p` | Forgetting rate for perseveration costs |
 | `trigger_frequency` | How often (every N timesteps) an environmental trigger fires |
 | `trigger_strength` | Amplitude of each trigger |
