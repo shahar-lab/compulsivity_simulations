@@ -3,36 +3,30 @@ rm(list = ls())
 library(tidyverse)
 library(brms)
 library(cmdstanr)
-load(file = "Exp3/data/ERP.rdata")
+load(file = "Exp4/data/4.rdata")
 # Check treatment success and relapse -------------------------------------
-
-#46 out of 100 agents have acquired the ritualistic action.
-#Out of these 46, 28 have relapsed following treatment termination
 
 period_results <- function(data, period_number) {
   results <- data %>%
     filter(period == period_number, state == 1) %>%  # Filter by period and state
-    mutate(
-      action_group = ifelse(action %in% 1:9, "1-9", "10")  # Classify actions into groups
-    ) %>%
-    group_by(subject, action_group, action) %>%  # Group by subject, action group, and individual action
+    group_by(subject, action) %>%
     summarise(
       action_count = n(),  # Count occurrences of each action
       .groups = "drop"     # Drop grouping after summarise
     ) %>%
-    group_by(subject, action_group) %>%
+    group_by(subject) %>%
     mutate(
-      total_actions = sum(action_count),  # Total actions per group
-      relative_frequency = action_count / total_actions  # Relative frequency for each action within the group
+      total_actions = sum(action_count),
+      relative_frequency = action_count / total_actions
     ) %>%
     ungroup()  # Remove all grouping
   
   return(results)
 }
 
-before_results=period_results(df5,1)
-treatment_results=period_results(df5,2)
-after_results=period_results(df5,3)
+before_results=period_results(df4,1)
+treatment_results=period_results(df4,2)
+after_results=period_results(df4,3)
 
 # Step 1: Add phase labels and combine dataframes
 before_results <- before_results %>% mutate(phase = "before")
@@ -51,8 +45,8 @@ max_freq <- combined_data %>%
   group_by(subject, phase) %>%
   summarise(max_relative_frequency = max(relative_frequency), .groups = "drop")
 
-treatment_cost=df5%>%group_by(subject)%>%summarise(treatment_cost=mean(treatment_cost))
-exposure_intensity=df5%>%group_by(subject)%>%summarise(exposure_intensity=mean(exposure_intensity))
+treatment_cost=df4%>%group_by(subject)%>%summarise(treatment_cost=mean(treatment_cost))
+exposure_intensity=df4%>%group_by(subject)%>%summarise(exposure_intensity=mean(exposure_intensity))
 
 max_freq <- max_freq %>%
   left_join(treatment_cost, by = "subject") %>%
@@ -86,17 +80,21 @@ ggplot(max_freq, aes(x = phase, y = max_relative_frequency, group = subject)) +
 
 
 
-# Check if treatment succeeded (waiting ritual acquired) ------------------
+# Check if treatment succeeded (ritual was suppressed during treatment) ----
 
-acquired=treatment_results%>%
+first_ritual_action <- before_results %>%
   group_by(subject) %>%
   filter(relative_frequency == max(relative_frequency)) %>%
-  select(subject, action, relative_frequency)%>%
-  summarise(waiting=mean(action==10))
+  slice(1) %>%
+  select(subject, ritual_action = action)
 
-treatment_success=mean(acquired$waiting) # percent of agents who acquired the waiting action
+acquired <- treatment_results %>%
+  inner_join(first_ritual_action, by = "subject") %>%
+  group_by(subject) %>%
+  summarise(suppressed = all(action != ritual_action | relative_frequency < 0.5))
 
-acquired_subjects=acquired%>%filter(waiting==1)%>%pull(subject)
+treatment_success <- mean(acquired$suppressed)
+acquired_subjects <- acquired %>% filter(suppressed) %>% pull(subject)
 
 # Check if relapsed to previous ritual ------------------------------------
 

@@ -1,4 +1,4 @@
-plot_by_period <- function(data) {
+plot_by_period <- function(data, Ntimesteps = 500) {
   
   # Load necessary libraries
   library(ggplot2)
@@ -68,27 +68,27 @@ plot_by_period <- function(data) {
   # Generate P(harm) plots for each period
   p1_harm <- period1 %>%
     ggplot(aes(x = timestep, y = p_harm)) +
-    geom_rect(aes(xmin = 0, xmax = 200, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = 0, xmax = 200, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
-    geom_line(color = "black", size = 1) +
+    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
+    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_line(color = "black", size = 0.1) +
     scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "Before treatment")
-  
+
   p2_harm <- period2 %>%
-    ggplot(aes(x = timestep + 200, y = p_harm)) +
-    geom_rect(aes(xmin = 201, xmax = 400, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = 201, xmax = 400, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
-    geom_line(color = "black", size = 1) +
+    ggplot(aes(x = timestep + Ntimesteps, y = p_harm)) +
+    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
+    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_line(color = "black", size = 0.1) +
     scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "During treatment")
-  
+
   p3_harm <- period3 %>%
-    ggplot(aes(x = timestep + 400, y = p_harm)) +
-    geom_rect(aes(xmin = 401, xmax = 600, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = 401, xmax = 600, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
-    geom_line(color = "black", size = 1) +
+    ggplot(aes(x = timestep + 2 * Ntimesteps, y = p_harm)) +
+    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
+    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_line(color = "black", size = 0.1) +
     scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "After treatment")

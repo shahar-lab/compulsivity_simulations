@@ -24,7 +24,6 @@ cfg = list(
   treatment = "before"
 )
 cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
-cfg$beta_wait=rep(1,cfg$Nsubjects)
 
 #High eta
 cfg$eta = 0.1
@@ -35,7 +34,8 @@ save(df, file = "Exp1/data/df_high_eta.rdata")
 
 #Low eta
 cfg$eta = 0.01
-df = sim.agent(subject, cfg)
+df = sim.agent(1, cfg)
 plot_action_proportions(df)
 save(df, file = "Exp1/data/df_low_eta.rdata")
+
 

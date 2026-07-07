@@ -38,3 +38,12 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Simulation data outputs
+Exp1/data/
+Exp2/data/
+Exp3/data/
+Exp4/data/
+
+# Local-only scripts
+Exp4/visualization/plot_examples.R

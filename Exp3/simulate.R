@@ -1,44 +1,51 @@
-# Simulate agents in 3 periods: before, during and after treatment.
+# Simulate two samples examining within-agent variability in action costs and self-control.
+# Sample 1: per-action repetition cost varies; estimate association with ritual formation.
+# Sample 2: per-action self-control (beta) varies; estimate association with ritual formation.
 
 rm(list = ls())
 library(tidyverse)
 source('model/advantage_actor_critic.R')
-source('Exp3/visualization/plot_by_period.R')
 
-# Set parameters ----------------------------------------------------------
+# Set parameters (high controllability agent from Exp1) -------------------
 
 cfg = list(
-  Nsubjects = 100,
-  Nperiods  = 3,
-  Ntimesteps= 200,
-  Nstates   = 2,
-  Nactions  = 10,
-  cutoff    = 0.05,
+  Nsubjects  = 200,
+  Nperiods   = 1,
+  Ntimesteps = 500,
+  Nstates    = 2,
+  Nactions   = 10,
+  cutoff     = 0.05,
   natural_relax_rate = 0.95,
   trigger_frequency  = 100,
   trigger_strength   = 5,
-  eta    = 0.1,
-  f_p    = 0.01,
-  treatment = c("before","during","after"), #0 is before, 1 is during and which periods are in treatment
-  exposure_intensity = 20,
-  treatment_cost = 100
+  eta        = 0.1,
+  f_p        = 0.01,
+  treatment  = "before",
+  treatment_cost    = rep(1, 200),
+  exposure_intensity= rep(1, 200),
+  v_harm     = rnorm(200, -100, 5),
+  freq_c     = rbeta(200, 1, 1000),
+  betas      = matrix(1, nrow = 2, ncol = 10)
 )
 
-#ERP
-df5=data.frame()
-cfg$v_harm =rnorm(cfg$Nsubjects,-100,5)
-cfg$freq_c =rbeta(cfg$Nsubjects,1,1000)
-cfg$pr     =rnorm(cfg$Nsubjects,0.02,0.05)
-cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
-cfg$beta_wait=rbeta(cfg$Nsubjects,2,10)
+# Sample 1: per-action repetition cost variability ------------------------
+# pr~N(2, 0.5) sampled once per action, shared across all 200 subjects
+cfg$pr = abs(rnorm(cfg$Nactions, 0.5, 0.5))
+
+df3A = data.frame()
 for (subject in 1:cfg$Nsubjects){
-df5 = rbind(df5,sim.agent(subject, cfg))
+  df3A = rbind(df3A, sim.agent(subject, cfg))
 }
-save(df5, file = "Exp3/data/ERP.rdata")
+save(df3A, file = "Exp3/data/3A.rdata")
 
-#visualize
-plot_unsuccesful_treatment=plot_by_period(df5%>%filter(subject==1))
+# Sample 2: per-action self-control variability ---------------------------
+# betas sampled once per action, shared across all subjects
+cfg$pr = 0
+cfg$betas = matrix(rbeta(cfg$Nactions, 1, 1),
+                   nrow = cfg$Nstates, ncol = cfg$Nactions, byrow = TRUE)
 
-plot_succesful_treatment=plot_by_period(df5%>%filter(subject==6))
-
-plot_relapse=plot_by_period(df5%>%filter(subject==2))
+df3B = data.frame()
+for (subject in 1:cfg$Nsubjects){
+  df3B = rbind(df3B, sim.agent(subject, cfg))
+}
+save(df3B, file = "Exp3/data/3B.rdata")

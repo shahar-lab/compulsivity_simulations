@@ -1,20 +1,34 @@
-plot_regression=function(path,path_save){
-load(path)
-conditional_effects_data <- conditional_effects(regression)
-conditional_effects_data=conditional_effects_data$`state:manipulation`
 
-custom_colors <- c('Dangerous' = 'coral1', 'Safe' = 'deepskyblue')
-# Set the order of the manipulation factor
-conditional_effects_data$manipulation <- factor(conditional_effects_data$manipulation,levels = c("Baseline", "Low V(harm)", "High freq(c)", "High cost"))
+plot_regression <- function(path, data, path_save = NULL) {
+  # Load the regression model from the specified path
+  load(path)
+  
+  # Generate conditional effects
+  conditional_effects_data <- conditional_effects(regression)
+  effect_name <- names(conditional_effects_data)[3]
+  ce_df <- conditional_effects_data[[effect_name]]
+  
+  # Extract the predictor variable name dynamically
+  predictor_var <- strsplit(effect_name, ":")[[1]][1]
+  # Create the customized plot
+  
+  plot_ce=ggplot() +
+    # Add the regression line and confidence intervals
+    geom_ribbon(data = ce_df, aes_string(x = predictor_var, ymin = "lower__", ymax = "upper__", fill = "state"), alpha = 0.2) +
+    geom_line(data = ce_df, aes_string(x = predictor_var, y = "estimate__", color = "state"), size = 1) +
+    # Overlay raw data points (correct dynamic referencing of column)
+    geom_point(data = data, aes_string(x = predictor_var, y = "max_frequency", color = "state"), alpha = 0.5) +
+    # Customize labels and theme
+    labs(x = predictor_var, y = "Ritual Frequency", color = "State", fill = "State") +
+    theme_bw()+scale_fill_manual(values = c("Dangerous" = "coral1", "Safe" = "deepskyblue")) +
+    scale_color_manual(values = c("Dangerous" = "coral1", "Safe" = "deepskyblue"))
+  
 
-# Custom plot with ggplot2
-plot=ggplot(conditional_effects_data, aes(x = manipulation, y = estimate__,color=state)) +
-  geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lower__, ymax = upper__), width = 0.2, position = position_dodge(width = 0.5)) +
-  facet_wrap(~state) +
-  scale_color_manual(values = custom_colors)+
-  theme_minimal() +
-  labs(x = "Manipulation", y = "P(ritualistic behavior)", color = "State")
-plot
-ggsave(filename = path_save, plot = plot, width = 799 / 72, height = 307 / 72)
+  if (!is.null(path_save)) {
+    ggsave(filename = path_save, plot = plot_ce, device = Cairo::CairoSVG, width = 3.5, height = 2)
+  } else {
+    print(plot_ce)
+  }
 }
+
+
