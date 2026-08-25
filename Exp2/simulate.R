@@ -21,6 +21,7 @@ cfg = list(
   exposure_intensity=rep(1,100), #nothing
   eta    = 0.1,
   f_p    = 0.01,
+  alpha_T = 0.1,
   treatment = "before"
 )
 
@@ -29,7 +30,7 @@ df1=data.frame()
 cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
 cfg$v_harm =rnorm(cfg$Nsubjects,-100,5)
 cfg$freq_c =rbeta(cfg$Nsubjects,1,1000)
-cfg$pr     = 0
+cfg$pr     = rep(0, cfg$Nsubjects)
 
 for (subject in 1:cfg$Nsubjects){
 df1 = rbind(df1,sim.agent(subject, cfg))

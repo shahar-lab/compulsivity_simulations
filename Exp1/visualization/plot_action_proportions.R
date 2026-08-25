@@ -11,15 +11,17 @@ plot_action_proportions <- function(data) {
   
   # Plot for p1
   
+  max_timestep <- max(data$timestep)
+
   p1 <- data %>%
     ggplot(aes(x = timestep, y = p_harm)) +
-    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = -1, xmax = 1001, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_rect(aes(xmin = -1, xmax = max_timestep + 1, ymin = 0, ymax = 0.05, fill = "Calm"), alpha = 1) +
+    geom_rect(aes(xmin = -1, xmax = max_timestep + 1, ymin = 0.05, ymax = 1, fill = "Anxious"), alpha = 1) +
     geom_line(color = "black", size = 1) +
-    scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
+    scale_fill_manual(values = c("Calm" = "deepskyblue", "Anxious" = "coral1")) +
     theme_classic() +
-    scale_x_continuous(breaks = seq(0, 1000, by = 100))+
-    labs(x = "Time step", y = "P(harm)", fill = "State") 
+    scale_x_continuous(breaks = seq(0, max_timestep, by = 100))+
+    labs(x = "Time step", y = "P(harm)", fill = "State")
   
   # Plot for p2
   p2 <- data %>%
@@ -30,7 +32,7 @@ plot_action_proportions <- function(data) {
     ggplot(aes(x = factor(action), y = proportion)) +
     geom_bar(stat = "identity", fill = "deepskyblue") +
     theme_classic() +
-    labs(x = "Action", y = "Action proportion", title = "Safe state") +
+    labs(x = "Action", y = "Action proportion", title = "Calm state") +
     scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::percent, limits = c(0, 1)) 
   
   
@@ -59,9 +61,10 @@ plot_action_proportions <- function(data) {
   p3 <- ggplot(action_counts_state1, aes(x = action, y = proportion)) +
     geom_bar(stat = "identity", fill = "coral1") +
     theme_classic() +
-    labs(x = "Action", y = "Action proportion", title = "Dangerous state") +
+    labs(x = "Action", y = "Action proportion", title = "Anxious state") +
     scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::percent, limits = c(0, 1))   
  
-    combined_plot=gridExtra::grid.arrange(p1,p2,p3)  
-  
+    combined_plot=gridExtra::grid.arrange(p1,p2,p3)
+
+  combined_plot
 }

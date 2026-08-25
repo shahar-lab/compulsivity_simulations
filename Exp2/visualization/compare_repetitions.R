@@ -31,6 +31,6 @@ for (i in 1:length(df_list)) {
 }
 results$state=factor(results$state)
 results <- results %>%
-  mutate(state = recode(state, '1' = 'Dangerous', '2' = 'Safe'))
+  mutate(state = recode(state, '1' = 'Anxious', '2' = 'Calm'))
 save(results,file="Exp2/data/results.rdata")
 }

@@ -21,7 +21,7 @@ plot_by_period <- function(data, Ntimesteps = 500) {
       ggplot(aes(x = factor(action), y = proportion)) +
       geom_bar(stat = "identity", fill = "deepskyblue") +
       theme_classic() +
-      labs(x = "Action", y = "Action proportion", title = "Safe state") +
+      labs(x = "Action", y = "Action proportion", title = "Calm state") +
       scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::percent, limits = c(0, 1)) 
     
     # Plot for dangerous state (state == 1)
@@ -49,7 +49,7 @@ plot_by_period <- function(data, Ntimesteps = 500) {
     p_danger <- ggplot(action_counts_state1, aes(x = action, y = proportion)) +
       geom_bar(stat = "identity", fill = "coral1") +
       theme_classic() +
-      labs(x = "Action", y = "Action proportion", title = "Dangerous state") +
+      labs(x = "Action", y = "Action proportion", title = "Anxious state") +
       scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::percent, limits = c(0, 1))   
     
     return(list(p_safe = p_safe, p_danger = p_danger))
@@ -68,28 +68,28 @@ plot_by_period <- function(data, Ntimesteps = 500) {
   # Generate P(harm) plots for each period
   p1_harm <- period1 %>%
     ggplot(aes(x = timestep, y = p_harm)) +
-    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0, ymax = 0.05, fill = "Calm"), alpha = 1) +
+    geom_rect(aes(xmin = 0, xmax = Ntimesteps, ymin = 0.05, ymax = 1, fill = "Anxious"), alpha = 1) +
     geom_line(color = "black", size = 0.1) +
-    scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
+    scale_fill_manual(values = c("Calm" = "deepskyblue", "Anxious" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "Before treatment")
 
   p2_harm <- period2 %>%
     ggplot(aes(x = timestep + Ntimesteps, y = p_harm)) +
-    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Calm"), alpha = 1) +
+    geom_rect(aes(xmin = Ntimesteps + 1, xmax = 2 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Anxious"), alpha = 1) +
     geom_line(color = "black", size = 0.1) +
-    scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
+    scale_fill_manual(values = c("Calm" = "deepskyblue", "Anxious" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "During treatment")
 
   p3_harm <- period3 %>%
     ggplot(aes(x = timestep + 2 * Ntimesteps, y = p_harm)) +
-    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Safe"), alpha = 1) +
-    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Dangerous"), alpha = 1) +
+    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0, ymax = 0.05, fill = "Calm"), alpha = 1) +
+    geom_rect(aes(xmin = 2 * Ntimesteps + 1, xmax = 3 * Ntimesteps, ymin = 0.05, ymax = 1, fill = "Anxious"), alpha = 1) +
     geom_line(color = "black", size = 0.1) +
-    scale_fill_manual(values = c("Safe" = "deepskyblue", "Dangerous" = "coral1")) +
+    scale_fill_manual(values = c("Calm" = "deepskyblue", "Anxious" = "coral1")) +
     theme_classic() +
     labs(x = "Time step", y = "P(harm)", fill = "State", title = "After treatment")
   
