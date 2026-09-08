@@ -3,7 +3,6 @@ sim.agent <- function(subject, cfg) {
 
   # Set parameters ---------------------------------------------------------
 
-  Nperiods  = cfg$Nperiods
   Ntimesteps= cfg$Ntimesteps
   Nstates   = cfg$Nstates
   Nactions  = cfg$Nactions
@@ -23,14 +22,9 @@ sim.agent <- function(subject, cfg) {
     pr = matrix(rep(cfg$pr[subject]), Nstates, Nactions)
   }
 
-  trigger_frequency      = cfg$trigger_frequency   #how often triggers occur
-  trigger_frequency_base = cfg$trigger_frequency   #saved for reset after treatment
+  trigger_frequency  = cfg$trigger_frequency   #how often triggers occur
   trigger_strength   = cfg$trigger_strength    #the amplitude of the trigger
   natural_relax_rate = cfg$natural_relax_rate  #decay rate of accumulated triggers
-
-  treatment=cfg$treatment
-  exposure_intensity=cfg$exposure_intensity[subject]
-  treatment_cost=cfg$treatment_cost[subject]
 
   # Initialization ----------------------------------------------------------
   h = 0       #trigger accumulator
@@ -42,21 +36,6 @@ sim.agent <- function(subject, cfg) {
   cost        = matrix(0, Nstates,Nactions) #costs for actor
 
   df = data.frame()
-
-  for (period in 1:Nperiods){
-    # Treatment period --------------------------------------------------------
-
-    if(treatment[period]=="during"){
-      trigger_frequency = round(trigger_frequency / exposure_intensity)
-      pr[1,] = pr[1,] * treatment_cost
-    }
-
-    else if(treatment[period]=="after"){
-      trigger_frequency = trigger_frequency_base
-      pr[1,] = pr[1,] / treatment_cost
-    }
-
-    action_counts = rep(0, Nactions)
 
   for (timestep in 1:Ntimesteps) {
     # States transition and state value ----------------------------------------------
@@ -80,16 +59,10 @@ sim.agent <- function(subject, cfg) {
 
     reward = sample(c(0, v_harm), 1, p = c(1 - freq_c, freq_c)) #freq_c is the actual chance for catastrophe in the env
 
-    # Track dangerous-state actions for ritual identification
-    if (state == 1) {
-      action_counts[action] = action_counts[action] + 1
-    }
-
     # Save timestep's data -------------------------------------------------------
 
     dfnew = data.frame(
       subject              = subject,
-      period               = period,
       timestep             = timestep,
       state                = state,
       action               = action,
@@ -105,11 +78,7 @@ sim.agent <- function(subject, cfg) {
       natural_relax_rate   = natural_relax_rate,
       gradient             = gradient,
       cost_action          = cost[state,action],
-      beta                 = betas[state,action],
-      treatment            = treatment[period],
-      treatment_cost       = treatment_cost,
-      exposure_intensity   = exposure_intensity,
-      trigger_frequency = trigger_frequency
+      beta                 = betas[state,action]
     )
 
     df = rbind(df, dfnew)
@@ -126,8 +95,8 @@ sim.agent <- function(subject, cfg) {
 
     # Perseveration cost ------------------------------------------------------
 
-      cost = (1 - f_p) * cost #forgetting
-      cost[state,action] = cost[state,action] - pr[state,action] #updating
+    cost = (1 - f_p) * cost #forgetting
+    cost[state,action] = cost[state,action] - pr[state,action] #updating
 
 
     # Threat belief dynamics --------------------------------------------------
@@ -142,9 +111,6 @@ sim.agent <- function(subject, cfg) {
     h = (h + trigger) * natural_relax_rate * (1 - p[action]) #trigger accumulation
 
     p_harm = (2 / (1 + exp(-h)) - 1) #goes between 0 and 1 for h values between 0 and +inf
-
-
-  }
 
   }
   return(df)

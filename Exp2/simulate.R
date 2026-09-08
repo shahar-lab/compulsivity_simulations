@@ -9,7 +9,6 @@ source('Exp2/visualization/compare_repetitions.R')
 
 cfg = list(
   Nsubjects = 100,
-  Nperiods  = 1,
   Ntimesteps= 500,
   Nstates   = 2,
   Nactions  = 10,
@@ -17,11 +16,8 @@ cfg = list(
   natural_relax_rate = 0.95,
   trigger_frequency  = 100,
   trigger_strength   = 5,
-  treatment_cost=rep(1,100), #nothing
-  exposure_intensity=rep(1,100), #nothing
   eta    = 0.1,
-  f_p    = 0.01,
-  treatment = "before"
+  f_p    = 0.01
 )
 
 #Baseline

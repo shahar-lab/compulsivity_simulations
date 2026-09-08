@@ -10,7 +10,6 @@ source('model/advantage_actor_critic.R')
 
 cfg = list(
   Nsubjects  = 200,
-  Nperiods   = 1,
   Ntimesteps = 500,
   Nstates    = 2,
   Nactions   = 10,
@@ -20,9 +19,6 @@ cfg = list(
   trigger_strength   = 5,
   eta        = 0.1,
   f_p        = 0.01,
-  treatment  = "before",
-  treatment_cost    = rep(1, 200),
-  exposure_intensity= rep(1, 200),
   v_harm     = rnorm(200, -100, 5),
   freq_c     = rbeta(200, 1, 1000),
   betas      = matrix(1, nrow = 2, ncol = 10)

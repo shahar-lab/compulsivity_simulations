@@ -1,6 +1,6 @@
 # Compulsivity Simulations
 
-Computational model of compulsive ritual formation and ERP treatment, implemented as an Advantage Actor-Critic (AAC) reinforcement learning agent.
+Computational model of compulsive ritual formation, implemented as an Advantage Actor-Critic (AAC) reinforcement learning agent.
 
 ## Model
 
@@ -23,8 +23,6 @@ The agent exists in a 2-state environment (safe / dangerous) defined by an inter
 | `trigger_strength` | Amplitude of each trigger |
 | `natural_relax_rate` | Decay rate of the accumulated threat signal `h` |
 | `cutoff` | `p_harm` threshold for entering the dangerous state (default 0.05) |
-| `treatment_cost` | Multiplier applied to perseveration costs during ERP treatment |
-| `exposure_intensity` | Divides `trigger_frequency` during treatment (more frequent triggers = more exposure) |
 
 ### Dynamics
 
@@ -32,7 +30,6 @@ The agent exists in a 2-state environment (safe / dangerous) defined by an inter
 - **Harm belief:** `p_harm = 2 / (1 + exp(-h)) - 1`  (sigmoid, 0 to 1)
 - **Actor update:** `theta[s,a] += eta * beta[s,a] * advantage * gradient`
 - **Perseveration:** `cost[s,a] -= pr[s,a]` after each action; decays by `(1 - f_p)` each timestep
-- **ERP treatment:** during treatment, `trigger_frequency` is divided by `exposure_intensity` (more frequent exposures) and all perseveration costs in the dangerous state are multiplied by `treatment_cost`
 
 ---
 
@@ -69,28 +66,8 @@ Demonstrates how environmental controllability shapes ritual formation. Two agen
 **Visualize:**
 - `Exp3/visualization/plot_cost_ritual.R` — ritual frequency as a function of action's `pr`
 - `Exp3/visualization/plot_beta_ritual.R` — ritual frequency as a function of action's `beta`
-- `Exp3/visualization/3A.R`, `Exp3/visualization/3B.R` — Bayesian regression results
 
 **Output:** `Exp3/data/3A.rdata`, `Exp3/data/3B.rdata`
-
----
-
-### Experiment 4 — ERP treatment simulation
-
-100 agents simulated across 3 periods: before, during, and after treatment. `pr` varies across actions (shared vector, same as Exp3A). `treatment_cost` and `exposure_intensity` vary across subjects. Agents are classified into three mutually exclusive treatment outcomes (proportions estimated via Bayesian intercept-only models):
-
-| Outcome | Definition |
-|---|---|
-| Unsuccessful Treatment | Ritual persists during the treatment period |
-| Relapse | Treatment suppressed the ritual, but the original ritual returned post-treatment |
-| Ritual Substitution | Treatment suppressed the ritual, but a new dominant action (freq > 50%) emerged post-treatment |
-
-**Run:** `source("Exp4/simulate.R")`  
-**Visualize:**
-- `Exp4/visualization/plot_outcomes.R` — Bayesian estimates (brms) of each outcome proportion with 95% HDI
-- `Exp4/visualization/plot_by_period.R` — function for plotting a single agent's P(harm) and action proportions across all 3 periods
-
-**Output:** `Exp4/data/4.rdata`, `Exp4/data/outcome_models.rdata`
 
 ---
 
@@ -103,10 +80,8 @@ source("Exp2/simulate.R")
 source("Exp2/plot.R")
 
 source("Exp3/simulate.R")
-source("Exp3/acquire_relapse_results.R")
-
-source("Exp4/simulate.R")
-source("Exp4/visualization/plot_outcomes.R")
+source("Exp3/visualization/plot_cost_ritual.R")
+source("Exp3/visualization/plot_beta_ritual.R")
 ```
 
 ---

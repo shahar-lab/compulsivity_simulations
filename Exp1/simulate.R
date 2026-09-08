@@ -9,7 +9,6 @@ source('Exp1/visualization/plot_action_proportions.R')
 
 cfg = list(
   Nsubjects = 1,
-  Nperiods  = 1,
   Ntimesteps= 500,
   Nstates   = 2,
   Nactions  = 10,
@@ -20,8 +19,7 @@ cfg = list(
   trigger_strength   = 5,
   freq_c = 0,
   pr     = 0,
-  f_p    = 0,
-  treatment = "before"
+  f_p    = 0
 )
 cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
 
