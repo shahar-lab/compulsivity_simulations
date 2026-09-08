@@ -3,7 +3,7 @@
 rm(list = ls())
 library(tidyverse)
 source('model/advantage_actor_critic.R')
-source('Exp1/visualization/plot_action_proportions.R')
+source('Exp1/plot.R')
 
 # Set parameters ----------------------------------------------------------
 

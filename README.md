@@ -33,14 +33,26 @@ The agent exists in a 2-state environment (safe / dangerous) defined by an inter
 
 ---
 
+## Folder structure
+
+Each experiment (`Exp1/`, `Exp2/`, `Exp3/`) follows the same layout:
+
+```
+ExpN/
+  simulate.R   # runs sim.agent() and saves output to data/
+  plot.R       # loads data/ and produces the experiment's figures/regressions
+  data/        # simulation output and fitted models (.rdata)
+```
+
+There is no separate `visualization/` subfolder — each experiment's plotting code lives entirely in its own `plot.R`.
+
 ## Experiments
 
 ### Experiment 1 — Ritual formation
 
 Demonstrates how environmental controllability shapes ritual formation. Two agents are simulated: one with high `eta` (high controllability, stronger learning) and one with low `eta`.
 
-**Run:** `source("Exp1/simulate.R")`  
-**Visualize:** `Exp1/visualization/plot_action_proportions.R`  
+**Run:** `source("Exp1/simulate.R")` (calls `plot_action_proportions()` from `Exp1/plot.R` inline)  
 **Output:** `Exp1/data/df_high_eta.rdata`, `Exp1/data/df_low_eta.rdata`
 
 ---
@@ -50,7 +62,6 @@ Demonstrates how environmental controllability shapes ritual formation. Two agen
 100 agents per condition. Three between-agent conditions vary the environment: baseline, reduced harm valence (`v_harm`), and increased compulsive trigger frequency (`freq_c`). Bayesian regression tests whether manipulation predicts ritualistic action frequency.
 
 **Run:** `source("Exp2/simulate.R")` then `source("Exp2/plot.R")`  
-**Visualize:** `Exp2/visualization/compare_repetitions.R`, `Exp2/visualization/plot_regression.R`  
 **Output:** `Exp2/data/`
 
 ---
@@ -62,11 +73,7 @@ Demonstrates how environmental controllability shapes ritual formation. Two agen
 - **Sample 3A:** `pr` varies across actions (`abs(N(0.5, 0.5))`), `betas = 1`. Tests whether actions with higher repetition cost are more likely to become the ritual.
 - **Sample 3B:** `pr = 0`, `betas` varies across actions (`Beta(1, 1)`). Tests whether actions with lower self-control are more likely to become the ritual.
 
-**Run:** `source("Exp3/simulate.R")`  
-**Visualize:**
-- `Exp3/visualization/plot_cost_ritual.R` — ritual frequency as a function of action's `pr`
-- `Exp3/visualization/plot_beta_ritual.R` — ritual frequency as a function of action's `beta`
-
+**Run:** `source("Exp3/simulate.R")` then `source("Exp3/plot.R")` (produces both the `pr` and `beta` ritual-frequency regressions)  
 **Output:** `Exp3/data/3A.rdata`, `Exp3/data/3B.rdata`
 
 ---
@@ -80,8 +87,7 @@ source("Exp2/simulate.R")
 source("Exp2/plot.R")
 
 source("Exp3/simulate.R")
-source("Exp3/visualization/plot_cost_ritual.R")
-source("Exp3/visualization/plot_beta_ritual.R")
+source("Exp3/plot.R")
 ```
 
 ---

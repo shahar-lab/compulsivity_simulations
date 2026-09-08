@@ -3,7 +3,6 @@
 rm(list = ls())
 library(tidyverse)
 source('model/advantage_actor_critic.R')
-source('Exp2/visualization/compare_repetitions.R')
 
 # Set parameters ----------------------------------------------------------
 
