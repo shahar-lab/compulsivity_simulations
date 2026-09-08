@@ -26,15 +26,12 @@ action_results <- action_freq %>%
   left_join(action_beta, by = "action")
 
 # Plot
-fig_beta_ritual <- ggplot(action_results, aes(x = beta, y = ritual_frequency)) +
+ggplot(action_results, aes(x = beta, y = ritual_frequency)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "#0072B2") +
   labs(x = "Self-control parameter (β)",
        y = "Ritual frequency") +
   theme_bw()
-fig_beta_ritual
-dir.create("Exp3/figures", showWarnings = FALSE)
-ggsave("Exp3/figures/fig_beta_ritual.svg", plot = fig_beta_ritual)
 
 # Bayesian regression
 model <- brm(
@@ -45,6 +42,4 @@ model <- brm(
 )
 save(model, file = "Exp3/data/regression_beta_ritual.rdata")
 c_eff <- conditional_effects(model)
-fig_beta_ritual_effects <- plot(c_eff, plot = FALSE)[[1]] + theme_bw()
-fig_beta_ritual_effects
-ggsave("Exp3/figures/fig_beta_ritual_effects.svg", plot = fig_beta_ritual_effects)
+plot(c_eff, plot = FALSE)[[1]] + theme_bw()

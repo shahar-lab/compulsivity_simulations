@@ -20,8 +20,8 @@ plot_regression <- function(path, data, path_save = NULL) {
     geom_point(data = data, aes_string(x = predictor_var, y = "max_frequency", color = "state"), alpha = 0.5) +
     # Customize labels and theme
     labs(x = predictor_var, y = "Ritual Frequency", color = "State", fill = "State") +
-    theme_bw()+scale_fill_manual(values = c("Anxious" = "coral1", "Calm" = "deepskyblue")) +
-    scale_color_manual(values = c("Anxious" = "coral1", "Calm" = "deepskyblue"))
+    theme_bw()+scale_fill_manual(values = c("Dangerous" = "coral1", "Safe" = "deepskyblue")) +
+    scale_color_manual(values = c("Dangerous" = "coral1", "Safe" = "deepskyblue"))
   
 
   if (!is.null(path_save)) {

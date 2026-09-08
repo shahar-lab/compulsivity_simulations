@@ -20,7 +20,6 @@ cfg = list(
   trigger_strength   = 5,
   eta        = 0.1,
   f_p        = 0.01,
-  alpha_T    = 0.1,
   treatment  = "before",
   treatment_cost    = rep(1, 200),
   exposure_intensity= rep(1, 200),
@@ -41,7 +40,7 @@ save(df3A, file = "Exp3/data/3A.rdata")
 
 # Sample 2: per-action self-control variability ---------------------------
 # betas sampled once per action, shared across all subjects
-cfg$pr = rep(0, cfg$Nsubjects)
+cfg$pr = 0
 cfg$betas = matrix(rbeta(cfg$Nactions, 1, 1),
                    nrow = cfg$Nstates, ncol = cfg$Nactions, byrow = TRUE)
 

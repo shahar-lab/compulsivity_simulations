@@ -26,15 +26,12 @@ action_results <- action_freq %>%
   left_join(action_pr, by = "action")
 
 # Plot
-fig_cost_ritual <- ggplot(action_results, aes(x = pr, y = ritual_frequency)) +
+ggplot(action_results, aes(x = pr, y = ritual_frequency)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "#0072B2") +
   labs(x = "Repetition cost (pr)",
        y = "Ritual frequency") +
   theme_bw()
-fig_cost_ritual
-dir.create("Exp3/figures", showWarnings = FALSE)
-ggsave("Exp3/figures/fig_cost_ritual.svg", plot = fig_cost_ritual)
 
 # Bayesian regression
 model <- brm(
@@ -45,6 +42,4 @@ model <- brm(
 )
 save(model, file = "Exp3/data/regression_cost_ritual.rdata")
 c_eff <- conditional_effects(model)
-fig_cost_ritual_effects <- plot(c_eff, plot = FALSE)[[1]] + theme_bw()
-fig_cost_ritual_effects
-ggsave("Exp3/figures/fig_cost_ritual_effects.svg", plot = fig_cost_ritual_effects)
+plot(c_eff, plot = FALSE)[[1]] + theme_bw()

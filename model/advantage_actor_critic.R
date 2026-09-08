@@ -11,7 +11,6 @@ sim.agent <- function(subject, cfg) {
   cutoff    = cfg$cutoff    #cutoff for internal state transition
   eta       = cfg$eta       #action learning rate environmental controllability estimation
   betas     = cfg$betas     #self-control estimation for each action
-  alpha_T   = if (length(cfg$alpha_T) > 1) cfg$alpha_T[subject] else cfg$alpha_T   #learning rate for trigger threat value (T)
 
   v_harm    = cfg$v_harm[subject]    #valence of the negative event
   freq_c    = cfg$freq_c[subject]    #frequency with which the negative event occurs
@@ -35,7 +34,6 @@ sim.agent <- function(subject, cfg) {
 
   # Initialization ----------------------------------------------------------
   h = 0       #trigger accumulator
-  T_val = 1   #learned trigger threat value
   p_harm = 0  #probability of how likely the agent thinks a negative event could occur
 
   state_value = rep(0, Nstates)              #critic
@@ -44,7 +42,6 @@ sim.agent <- function(subject, cfg) {
   cost        = matrix(0, Nstates,Nactions) #costs for actor
 
   df = data.frame()
-  ritual_action = NA #most frequent dangerous-state action in period 1, identified once period 1 ends
 
   for (period in 1:Nperiods){
     # Treatment period --------------------------------------------------------
@@ -57,10 +54,6 @@ sim.agent <- function(subject, cfg) {
     else if(treatment[period]=="after"){
       trigger_frequency = trigger_frequency_base
       pr[1,] = pr[1,] / treatment_cost
-    }
-
-    if (period > 1 && is.na(ritual_action)) {
-      ritual_action = which.max(prior_action_counts)
     }
 
     action_counts = rep(0, Nactions)
@@ -80,15 +73,8 @@ sim.agent <- function(subject, cfg) {
 
     # Action selection --------------------------------------------------------
 
-    logits    = thetas[state, ] + cost[state, ]
-    p         = exp(logits - max(logits)) / sum(exp(logits - max(logits)))
+    p         = exp(thetas[state, ] + cost[state, ]) / sum(exp(thetas[state, ] + cost[state, ]))
     action    = sample(1:Nactions, 1, prob = p)
-
-    # Dangerous-state selection probability of the original ritual action,
-    # computed every timestep regardless of the current state, so its
-    # trajectory is always defined once the ritual is identified.
-    logits_dangerous = thetas[1, ] + cost[1, ]
-    p_dangerous       = exp(logits_dangerous - max(logits_dangerous)) / sum(exp(logits_dangerous - max(logits_dangerous)))
 
     # Outcome -----------------------------------------------------------------
 
@@ -115,15 +101,11 @@ sim.agent <- function(subject, cfg) {
       freq_c               = freq_c,
       state_value          = state_value[state],
       thetas               = thetas[state,action],
-      theta_ritual         = if (is.na(ritual_action)) NA else thetas[1, ritual_action],
-      p_ritual             = if (is.na(ritual_action)) NA else p_dangerous[ritual_action],
       eta                  = eta,
       natural_relax_rate   = natural_relax_rate,
       gradient             = gradient,
       cost_action          = cost[state,action],
       beta                 = betas[state,action],
-      T_val                = T_val,
-      alpha_T              = alpha_T,
       treatment            = treatment[period],
       treatment_cost       = treatment_cost,
       exposure_intensity   = exposure_intensity,
@@ -157,20 +139,12 @@ sim.agent <- function(subject, cfg) {
       trigger = 0
     }
 
-    catastrophe = as.numeric(reward == v_harm)
-
-    if (trigger > 0) {
-      T_val = T_val + alpha_T * (catastrophe - T_val) #update learned trigger threat value
-    }
-
-    h = (h + T_val * trigger) * natural_relax_rate * (1 - p[action]) #trigger accumulation
+    h = (h + trigger) * natural_relax_rate * (1 - p[action]) #trigger accumulation
 
     p_harm = (2 / (1 + exp(-h)) - 1) #goes between 0 and 1 for h values between 0 and +inf
 
 
   }
-
-  prior_action_counts = action_counts
 
   }
   return(df)

@@ -21,28 +21,21 @@ cfg = list(
   freq_c = 0,
   pr     = 0,
   f_p    = 0,
-  alpha_T = 0.1,
-  treatment = "before",
-  treatment_cost = 0,
-  exposure_intensity = 0
+  treatment = "before"
 )
 cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
-
-dir.create("Exp1/figures", showWarnings = FALSE)
 
 #High eta
 cfg$eta = 0.1
 df = sim.agent(1, cfg)
-fig_high_eta = plot_action_proportions(df)
+plot_action_proportions(df)
 save(df, file = "Exp1/data/df_high_eta.rdata")
-ggsave("Exp1/figures/fig_high_eta.svg", plot = fig_high_eta)
 
 
 #Low eta
 cfg$eta = 0.01
 df = sim.agent(1, cfg)
-fig_low_eta = plot_action_proportions(df)
+plot_action_proportions(df)
 save(df, file = "Exp1/data/df_low_eta.rdata")
-ggsave("Exp1/figures/fig_low_eta.svg", plot = fig_low_eta)
 
 
