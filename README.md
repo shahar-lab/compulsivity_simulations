@@ -7,7 +7,7 @@ Computational model of compulsive ritual formation, implemented as an Advantage 
 **File:** `model/advantage_actor_critic.R`  
 **Entry point:** `sim.agent(subject, cfg)`
 
-The agent exists in a 2-state environment (safe / dangerous) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy; repeated actions in the dangerous state become ritualized through perseveration costs that increase their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
+The agent exists in a 2-state environment (calm / anxious) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy; repeated actions in the dangerous state become ritualized through perseveration costs that increase their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
 
 ### Key parameters
 
