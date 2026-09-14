@@ -62,6 +62,43 @@ plot_action_proportions <- function(data) {
     labs(x = "Action", y = "Action proportion", title = "Dangerous state") +
     scale_y_continuous(breaks = seq(0, 1, by = 0.25), labels = scales::percent, limits = c(0, 1))   
  
-    combined_plot=gridExtra::grid.arrange(p1,p2,p3)  
-  
+    combined_plot=gridExtra::grid.arrange(p1,p2,p3)
+
+}
+
+plot_mode_action_share <- function(data) {
+
+  library(ggplot2)
+  library(dplyr)
+
+  state_labels = c("1" = "Anxious", "2" = "Calm")
+  state_colors = c("Calm" = "deepskyblue", "Anxious" = "coral1")
+  state_outline = c("Calm" = "#2b6f9e", "Anxious" = "#8a3d00")
+
+  agent_mode_share = data %>%
+    group_by(controllability, subject, state, action) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(controllability, subject, state) %>%
+    summarise(mode_share = max(count) / sum(count), .groups = "drop") %>%
+    mutate(
+      state = factor(state, levels = c(2, 1), labels = state_labels[c("2", "1")]),
+      controllability = factor(controllability, levels = c("Low", "High"))
+    )
+
+  uniform_share = 1 / length(unique(data$action))
+
+  ggplot(agent_mode_share, aes(x = controllability, y = mode_share, fill = state, color = state)) +
+    geom_boxplot(linewidth = 0.4, outlier.size = 1) +
+    geom_hline(yintercept = uniform_share, linetype = "dashed", color = "black") +
+    annotate("text", x = Inf, y = uniform_share, label = "Uniform policy",
+             hjust = 1, vjust = 1.5, size = 2.8) +
+    scale_fill_manual(values = state_colors) +
+    scale_color_manual(values = state_outline, guide = "none") +
+    theme_classic(base_size = 9) +
+    labs(x = "Controllability", y = "Proportion of most-chosen action", fill = "State") +
+    scale_y_continuous(
+      labels = scales::percent,
+      limits = c(0, 1),
+      breaks = sort(c(seq(0, 1, by = 0.25), uniform_share))
+    )
 }

@@ -11,15 +11,15 @@ sim.agent <- function(subject, cfg) {
   eta       = cfg$eta       #action learning rate environmental controllability estimation
   betas     = cfg$betas     #self-control estimation for each action
 
-  v_harm    = cfg$v_harm[subject]    #valence of the negative event
-  freq_c    = cfg$freq_c[subject]    #frequency with which the negative event occurs
+  v_harm    = cfg$v_harm[min(subject, length(cfg$v_harm))]    #valence of the negative event
+  freq_c    = cfg$freq_c[min(subject, length(cfg$freq_c))]    #frequency with which the negative event occurs
   f_p       = cfg$f_p       #forgetting rate for perseveration cost
 
   # per-action pr (same cost for both states) vs per-subject scalar pr
   if (length(cfg$pr) == Nactions) {
     pr = matrix(rep(cfg$pr, times = Nstates), nrow = Nstates, byrow = TRUE)
   } else {
-    pr = matrix(rep(cfg$pr[subject]), Nstates, Nactions)
+    pr = matrix(rep(cfg$pr[min(subject, length(cfg$pr))]), Nstates, Nactions)
   }
 
   trigger_frequency  = cfg$trigger_frequency   #how often triggers occur
