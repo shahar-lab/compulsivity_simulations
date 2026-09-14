@@ -7,17 +7,17 @@ Computational model of compulsive ritual formation, implemented as an Advantage 
 **File:** `model/advantage_actor_critic.R`  
 **Entry point:** `sim.agent(subject, cfg)`
 
-The agent exists in a 2-state environment (safe / dangerous) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy; repeated actions in the dangerous state become ritualized through perseveration costs that increase their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
+The agent exists in a 2-state environment (calm / anxious) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy; repeated actions in the dangerous state become ritualized through perseveration costs that increase their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
 
 ### Key parameters
 
 | Parameter | Description |
 |---|---|
 | `eta` | Environmental controllability — scales how much the agent updates action preferences from outcomes |
-| `betas` | Self-control matrix (states × actions) — scales action preference updates per action |
-| `v_harm` | Valence of the negative outcome |
-| `freq_c` | Probability of a negative outcome occurring at each timestep |
-| `pr` | Repetition (perseveration) cost per action — higher values make an action less likely to be repeated |
+| `betas` | Associability matrix (states × actions) — scales updates per action |
+| `v_harm` | Valence of the feared outcome |
+| `freq_c` | Probability of the negative outcome occurring at each timestep |
+| `pr` | Repetition (perseveration) cost per action repetition — higher values make an action less likely to be repeated |
 | `f_p` | Forgetting rate for perseveration costs |
 | `trigger_frequency` | How often (every N timesteps) an environmental trigger fires |
 | `trigger_strength` | Amplitude of each trigger |
