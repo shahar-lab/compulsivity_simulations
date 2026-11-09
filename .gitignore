@@ -52,3 +52,6 @@ Exp4/data/
 
 # Local-only scripts
 Exp4/visualization/plot_examples.R
+
+# Claude Code local settings
+.claude/
