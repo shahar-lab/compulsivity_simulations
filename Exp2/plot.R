@@ -32,15 +32,16 @@ plot_regression <- function(path, data, path_save = NULL) {
 
 
   if (!is.null(path_save)) {
-    ggsave(filename = path_save, plot = plot_ce, device = Cairo::CairoSVG, width = 3.5, height = 2)
-  } else {
-    print(plot_ce)
+    ggsave(filename = path_save, plot = plot_ce, width = 3.5, height = 2, dpi = 150)
   }
+  print(plot_ce)
 }
 
 # Run --------------------------------------------------------------------
 
 load(file = "Exp2/data/results.rdata")
 
-plot_regression("Exp2/data/regression_v_harm.rdata", results %>% filter(manipulation == "Low V(harm)"))
-plot_regression("Exp2/data/regression_freq_c.rdata", results %>% filter(manipulation == "High freq(c)"))
+plot_regression("Exp2/data/regression_v_harm.rdata", results %>% filter(manipulation == "Low V(harm)"),
+                "Exp2/regression_v_harm.png")
+plot_regression("Exp2/data/regression_freq_c.rdata", results %>% filter(manipulation == "High freq(c)"),
+                "Exp2/regression_freq_c.png")

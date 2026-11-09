@@ -8,26 +8,34 @@ library(brms)
 
 load(file = "Exp3/data/regression_cost_ritual.rdata")
 
-ggplot(model_cost$data, aes(x = pr, y = ritual_frequency)) +
+p_cost <- ggplot(model_cost$data, aes(x = pr, y = ritual_frequency)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "#0072B2") +
   labs(x = "Repetition cost (pr)",
        y = "Ritual frequency") +
   theme_bw()
+print(p_cost)
+ggsave("Exp3/ritual_vs_cost.png", p_cost, width = 4.5, height = 4, dpi = 150)
 
 c_eff_cost <- conditional_effects(model_cost)
-plot(c_eff_cost, plot = FALSE)[[1]] + theme_bw()
+p_ce_cost <- plot(c_eff_cost, plot = FALSE)[[1]] + theme_bw()
+print(p_ce_cost)
+ggsave("Exp3/ritual_vs_cost_effects.png", p_ce_cost, width = 4.5, height = 4, dpi = 150)
 
 # Sample 3B: ritual frequency vs. action associability (beta) -------------
 
 load(file = "Exp3/data/regression_beta_ritual.rdata")
 
-ggplot(model_beta$data, aes(x = beta, y = ritual_frequency)) +
+p_beta <- ggplot(model_beta$data, aes(x = beta, y = ritual_frequency)) +
   geom_point(size = 3) +
   geom_smooth(method = "lm", se = TRUE, color = "#0072B2") +
   labs(x = "Action associability (β)",
        y = "Ritual frequency") +
   theme_bw()
+print(p_beta)
+ggsave("Exp3/ritual_vs_beta.png", p_beta, width = 4.5, height = 4, dpi = 150)
 
 c_eff_beta <- conditional_effects(model_beta)
-plot(c_eff_beta, plot = FALSE)[[1]] + theme_bw()
+p_ce_beta <- plot(c_eff_beta, plot = FALSE)[[1]] + theme_bw()
+print(p_ce_beta)
+ggsave("Exp3/ritual_vs_beta_effects.png", p_ce_beta, width = 4.5, height = 4, dpi = 150)

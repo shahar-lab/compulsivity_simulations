@@ -28,7 +28,8 @@ cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
 #High eta
 cfg$eta = 0.1
 df = sim.agent(1, cfg)
-plot_action_proportions(df, cfg$Ntimesteps)
+p_high_eta = plot_action_proportions(df, cfg$Ntimesteps)
+ggsave("Exp1/action_proportions_high_eta.png", p_high_eta, width = 6, height = 8, dpi = 150)
 save(df, file = "Exp1/data/df_high_eta.rdata")
 
 df_high_eta_all = map_dfr(1:Nagents, function(i) sim.agent(i, cfg))
@@ -38,7 +39,8 @@ save(df_high_eta_all, file = "Exp1/data/df_high_eta_all.rdata")
 #Low eta
 cfg$eta = 0.01
 df = sim.agent(1, cfg)
-plot_action_proportions(df, cfg$Ntimesteps)
+p_low_eta = plot_action_proportions(df, cfg$Ntimesteps)
+ggsave("Exp1/action_proportions_low_eta.png", p_low_eta, width = 6, height = 8, dpi = 150)
 save(df, file = "Exp1/data/df_low_eta.rdata")
 
 df_low_eta_all = map_dfr(1:Nagents, function(i) sim.agent(i, cfg))
