@@ -39,6 +39,11 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+# Figures
+*.png
+*.pdf
+*.svg
+
 # Simulation data outputs
 Exp1/data/
 Exp2/data/

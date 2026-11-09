@@ -7,7 +7,7 @@ Computational model of compulsive ritual formation, implemented as an Advantage 
 **File:** `model/advantage_actor_critic.R`  
 **Entry point:** `sim.agent(subject, cfg)`
 
-The agent exists in a 2-state environment (calm / anxious) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy; repeated actions in the dangerous state become ritualized through perseveration costs that increase their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
+The agent exists in a 2-state environment (calm / anxious) defined by an internal threat belief `p_harm`. Triggers accumulate over time and push the agent into a dangerous state. The agent selects among 10 actions using a softmax policy. Actions repeated in the dangerous state become ritualized despite a cost for repetition that decreases their relative selection probability. A critic estimates the value of the current state; the actor updates action preferences via the advantage signal.
 
 ### Key parameters
 
@@ -17,8 +17,8 @@ The agent exists in a 2-state environment (calm / anxious) defined by an interna
 | `betas` | Associability matrix (states × actions) — scales updates per action |
 | `v_harm` | Valence of the feared outcome |
 | `freq_c` | Probability of the negative outcome occurring at each timestep |
-| `pr` | Repetition (perseveration) cost per action repetition — higher values make an action less likely to be repeated |
-| `f_p` | Forgetting rate for perseveration costs |
+| `pr` | Repetition (perseveration) cost per action repetition — higher values accumulate a negative cost and make an action less likely to be repeated |
+| `f_p` | Forgetting rate for repetition costs |
 | `trigger_frequency` | How often (every N timesteps) an environmental trigger fires |
 | `trigger_strength` | Amplitude of each trigger |
 | `natural_relax_rate` | Decay rate of the accumulated threat signal `h` |
@@ -40,7 +40,8 @@ Each experiment (`Exp1/`, `Exp2/`, `Exp3/`) follows the same layout:
 ```
 ExpN/
   simulate.R   # runs sim.agent() and saves output to data/
-  plot.R       # loads data/ and produces the experiment's figures/regressions
+  posterior.R  # fits the brms regressions and saves them to data/
+  plot.R       # loads data/ and produces the experiment's figures
   data/        # simulation output and fitted models (.rdata)
 ```
 
@@ -61,19 +62,19 @@ Demonstrates how environmental controllability shapes ritual formation. Two agen
 
 100 agents per condition. Three between-agent conditions vary the environment: baseline, reduced harm valence (`v_harm`), and increased compulsive trigger frequency (`freq_c`). Bayesian regression tests whether manipulation predicts ritualistic action frequency.
 
-**Run:** `source("Exp2/simulate.R")` then `source("Exp2/plot.R")`  
+**Run:** `source("Exp2/simulate.R")`, `source("Exp2/posterior.R")`, then `source("Exp2/plot.R")`  
 **Output:** `Exp2/data/`
 
 ---
 
 ### Experiment 3 — Between-action variability
 
-200 agents (two samples of 100). Perseveration cost `pr` and self-control `betas` vary across actions (not subjects) — all subjects share the same action-level parameter vector.
+Two samples of 200 agents. Perseveration cost `pr` and action associability `betas` vary across actions (not subjects) — all subjects share the same action-level parameter vector.
 
-- **Sample 3A:** `pr` varies across actions (`abs(N(0.5, 0.5))`), `betas = 1`. Tests whether actions with higher repetition cost are more likely to become the ritual.
-- **Sample 3B:** `pr = 0`, `betas` varies across actions (`Beta(1, 1)`). Tests whether actions with lower self-control are more likely to become the ritual.
+- **Sample 3A:** `pr` varies across actions (`abs(N(0.5, 0.5))`), `betas = 1`. Tests whether actions with less negative repetition cost are more likely to become the ritual.
+- **Sample 3B:** `pr = 0`, `betas` varies across actions (`Beta(1, 1)`). Tests whether actions with higher `beta` are more likely to become the ritual.
 
-**Run:** `source("Exp3/simulate.R")` then `source("Exp3/plot.R")` (produces both the `pr` and `beta` ritual-frequency regressions)  
+**Run:** `source("Exp3/simulate.R")`, `source("Exp3/posterior.R")` (fits both the `pr` and `beta` ritual-frequency regressions), then `source("Exp3/plot.R")`  
 **Output:** `Exp3/data/3A.rdata`, `Exp3/data/3B.rdata`
 
 ---
@@ -82,11 +83,14 @@ Demonstrates how environmental controllability shapes ritual formation. Two agen
 
 ```
 source("Exp1/simulate.R")
+source("Exp1/posterior.R")
 
 source("Exp2/simulate.R")
+source("Exp2/posterior.R")
 source("Exp2/plot.R")
 
 source("Exp3/simulate.R")
+source("Exp3/posterior.R")
 source("Exp3/plot.R")
 ```
 

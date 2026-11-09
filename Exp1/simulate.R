@@ -7,7 +7,7 @@ source('Exp1/plot.R')
 
 # Set parameters ----------------------------------------------------------
 
-Nagents = 50
+Nagents = 100
 
 cfg = list(
   Nsubjects = Nagents,
@@ -28,7 +28,7 @@ cfg$betas  = matrix(1, nrow = cfg$Nstates, ncol = cfg$Nactions)
 #High eta
 cfg$eta = 0.1
 df = sim.agent(1, cfg)
-plot_action_proportions(df)
+plot_action_proportions(df, cfg$Ntimesteps)
 save(df, file = "Exp1/data/df_high_eta.rdata")
 
 df_high_eta_all = map_dfr(1:Nagents, function(i) sim.agent(i, cfg))
@@ -38,7 +38,7 @@ save(df_high_eta_all, file = "Exp1/data/df_high_eta_all.rdata")
 #Low eta
 cfg$eta = 0.01
 df = sim.agent(1, cfg)
-plot_action_proportions(df)
+plot_action_proportions(df, cfg$Ntimesteps)
 save(df, file = "Exp1/data/df_low_eta.rdata")
 
 df_low_eta_all = map_dfr(1:Nagents, function(i) sim.agent(i, cfg))

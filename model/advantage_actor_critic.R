@@ -9,7 +9,7 @@ sim.agent <- function(subject, cfg) {
 
   cutoff    = cfg$cutoff    #cutoff for internal state transition
   eta       = cfg$eta       #action learning rate environmental controllability estimation
-  betas     = cfg$betas     #self-control estimation for each action
+  betas     = cfg$betas     #action associability for each action
 
   v_harm    = cfg$v_harm[min(subject, length(cfg$v_harm))]    #valence of the negative event
   freq_c    = cfg$freq_c[min(subject, length(cfg$freq_c))]    #frequency with which the negative event occurs
@@ -91,7 +91,7 @@ sim.agent <- function(subject, cfg) {
 
     thetas[state,action] = thetas[state,action] + eta * betas[state,action] *
       advantage * gradient
-    #eta is environmental controllability and betas are self-control for the specific action.
+    #eta is environmental controllability and betas are the associability of the specific action.
 
     # Perseveration cost ------------------------------------------------------
 
