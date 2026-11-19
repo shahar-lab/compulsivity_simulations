@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ritual Agent Simulator</title>
+<meta name="description" content="Interactive simulations of an actor-critic agent that develops ritualistic behavior in an uncontrollable environment.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: instrument rack. A parameter rack on the left drives a polygraph-style montage of time-aligned traces on the right; the other tabs reuse the same chart language. */
+:root{
+  --bg:#F3F5F8;--panel:#FFFFFF;--sunk:#EDF0F4;
+  --ink:#141A23;--ink-2:#4A5462;--muted:#737D8D;
+  --line:#E0E5EB;--line-strong:#C7CFD9;
+  --accent:#2E3D5B;--on-accent:#FFFFFF;--focus:#4A78D6;
+  --anx:#E0582F;--anx-wash:rgba(224,88,47,.13);--anx-bg:#FCEAE3;--anx-ink:#9E3714;
+  --calm:#1D90C4;--calm-wash:rgba(29,144,196,.12);--calm-bg:#E2F2FA;--calm-ink:#0C6590;
+  --note-bg:#FFF1CC;--note-ink:#6B4800;
+  --tip-bg:#141A23;--tip-ink:#F3F5F8;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1015;--panel:#141A22;--sunk:#0F141B;
+  --ink:#E5EAF0;--ink-2:#A6B0BD;--muted:#7F8A99;
+  --line:#222A34;--line-strong:#333D4A;
+  --accent:#C5D3EE;--on-accent:#0C1015;--focus:#7FA3EE;
+  --anx:#EF6C45;--anx-wash:rgba(239,108,69,.17);--anx-bg:#3A1C12;--anx-ink:#FFB29A;
+  --calm:#39A7DA;--calm-wash:rgba(57,167,218,.15);--calm-bg:#0E2938;--calm-ink:#9AD4F1;
+  --note-bg:#352A0C;--note-ink:#F0CD78;
+  --tip-bg:#E5EAF0;--tip-ink:#0C1015;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1015;--panel:#141A22;--sunk:#0F141B;
+  --ink:#E5EAF0;--ink-2:#A6B0BD;--muted:#7F8A99;
+  --line:#222A34;--line-strong:#333D4A;
+  --accent:#C5D3EE;--on-accent:#0C1015;--focus:#7FA3EE;
+  --anx:#EF6C45;--anx-wash:rgba(239,108,69,.17);--anx-bg:#3A1C12;--anx-ink:#FFB29A;
+  --calm:#39A7DA;--calm-wash:rgba(57,167,218,.15);--calm-bg:#0E2938;--calm-ink:#9AD4F1;
+  --note-bg:#352A0C;--note-ink:#F0CD78;
+  --tip-bg:#E5EAF0;--tip-ink:#0C1015;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1380px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 56px}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+header.top{display:flex;flex-direction:column;gap:16px;margin-bottom:18px}
+.brand{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 28px}
+.brand>div{min-width:0}
+h1{font-family:var(--f-display);font-weight:600;font-size:32px;line-height:1.08;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--ink-2);max-width:66ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:12px;color:var(--muted)}
+.chip-note{background:var(--note-bg);color:var(--note-ink);font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 14px;font:500 14px var(--f-body);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+.eyebrow{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:500 13px var(--f-body);padding:7px 12px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--sunk)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.12)}
+.btn.small{padding:3px 8px;font-size:12px;border-radius:6px}
+.btn svg{width:13px;height:13px;fill:currentColor}
+select{font:13px var(--f-body);padding:6px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink)}
+input[type=number]{font:13px var(--f-mono);padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);width:96px}
+
+/* playground */
+.pg{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+.rack{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.grp{display:flex;flex-direction:column;gap:11px}
+.rack-params{display:flex;flex-direction:column;gap:20px}
+.prm{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;column-gap:8px}
+.prm label,.lbl{font-size:13px;color:var(--ink)}
+.sym{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-left:6px}
+.prm output{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.prm input[type=range]{grid-column:1/-1;width:100%;margin:5px 0 0;accent-color:var(--accent)}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.preset{font:500 12px var(--f-body);padding:5px 10px;border-radius:999px;border:1px solid var(--line-strong);background:var(--panel);color:var(--ink-2);cursor:pointer}
+.preset:hover{color:var(--ink);border-color:var(--ink-2)}
+.preset[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.aed{display:flex;flex-direction:column;gap:4px}
+.aed-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.aed-tools{display:flex;gap:4px}
+.aed-bars{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;height:52px;background:var(--sunk);border-radius:6px;padding:4px;touch-action:none;cursor:ns-resize}
+.aed-col{border:0;background:none;padding:0;display:flex;align-items:flex-end;height:100%;cursor:ns-resize;border-radius:3px}
+.aed-fill{display:block;width:100%;background:var(--ink-2);border-radius:3px 3px 0 0;min-height:2px;pointer-events:none}
+.aed-idx{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;padding:0 4px;font:10px var(--f-mono);color:var(--muted);text-align:center}
+.seedrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.seedctl{display:flex;gap:6px;align-items:center}
+
+.display{display:flex;flex-direction:column;gap:14px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.k-label{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.k-val{font-family:var(--f-display);font-weight:600;font-size:30px;line-height:1.12}
+.k-sub{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.dot.anx{background:var(--anx)}.dot.calm{background:var(--calm)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;min-width:0}
+.card-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-bottom:10px}
+.card-title{font:600 14px var(--f-body);margin:0;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:12px;color:var(--muted)}
+.readout{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);min-height:24px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-variant-numeric:tabular-nums;min-width:0}
+.pill{font:500 11px var(--f-mono);padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+.pill.anx{background:var(--anx-bg);color:var(--anx-ink)}.pill.calm{background:var(--calm-bg);color:var(--calm-ink)}
+.pill.cat{background:var(--ink);color:var(--panel)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink-2);align-items:center;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+.sw.wash{background:var(--anx-wash);box-shadow:inset 0 0 0 1px var(--anx)}
+.glyph{font-family:var(--f-mono);font-size:12px;color:var(--ink)}
+.dia{width:9px;height:9px;transform:rotate(45deg);border:1.5px solid var(--ink);background:var(--panel);display:inline-block}
+.k-val.seq{font-size:22px;line-height:1.53}
+.ln{display:inline-block;width:16px;height:2px;border-radius:1px;background:var(--line-strong)}
+.ln.anx{background:var(--anx);height:3px}
+.prm.off label,.prm.off output,.prm.off input{opacity:.45}
+canvas{display:block;width:100%}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.play{display:flex;align-items:center;gap:8px}
+
+/* paper */
+.paper-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;font-size:13px;color:var(--ink-2);padding-top:4px}
+.sub-h{font:600 13px var(--f-body);color:var(--ink);margin-right:4px}
+.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:6px}
+.chk input{accent-color:var(--accent);margin:0}
+.sim{display:flex;flex-direction:column;gap:14px;padding-block:18px 30px;border-bottom:1px solid var(--line)}
+.sim:last-child{border-bottom:0}
+.sim h2{font-family:var(--f-display);font-weight:600;font-size:23px;margin:2px 0 0;line-height:1.2;text-wrap:balance}
+.sim .desc{margin:4px 0 0;color:var(--ink-2);max-width:72ch}
+.split{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start}
+.cmp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+.cmp th,.cmp td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.cmp th:first-child,.cmp td:first-child{text-align:left;white-space:normal}
+.cmp th{font-weight:500;color:var(--muted);font-size:11.5px}
+.cmp td.num{font-family:var(--f-mono)}
+.cmp tr.sep td{border-bottom:0;padding-top:14px;color:var(--muted);font-size:11.5px}
+.note{background:var(--note-bg);color:var(--note-ink);border-radius:8px;padding:9px 12px;font-size:12.5px;max-width:84ch}
+.note b{font-weight:600}
+.tbl-wrap{overflow-x:auto}
+
+/* map */
+.map-ctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.progress{height:4px;background:var(--sunk);border-radius:2px;overflow:hidden;width:150px;align-self:center}
+.progress i{display:block;height:100%;width:0;background:var(--accent)}
+.map-legend{display:flex;align-items:center;gap:10px;font:11.5px var(--f-mono);color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.map-legend .bar{width:180px;height:10px;border-radius:2px}
+.map-wrap{max-width:820px}
+
+/* model */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.step .n{font:500 11px var(--f-mono);color:var(--muted)}
+.step h3{font:600 14px var(--f-body);margin:0}
+.step p{margin:0;font-size:13px;color:var(--ink-2)}
+.loops{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
+.loop{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--ink-2)}
+.loop strong{color:var(--ink);font-weight:600}
+.eqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:10px}
+.eq{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+.eq .no{font:500 12px var(--f-mono);color:var(--muted)}
+.eq .m{overflow-x:auto;padding-block:2px}
+.eq .cap{grid-column:2;font-size:12px;color:var(--muted)}
+math{font-size:17px;color:var(--ink)}
+.mtitle{font-family:var(--f-display);font-weight:600;font-size:21px;margin:26px 0 10px}
+.mtitle:first-child{margin-top:8px}
+ul.notes{margin:0;padding-left:18px;color:var(--ink-2);max-width:80ch;display:flex;flex-direction:column;gap:4px}
+
+.tip{position:absolute;z-index:30;pointer-events:none;background:var(--tip-bg);color:var(--tip-ink);font:12px/1.45 var(--f-mono);padding:6px 9px;border-radius:6px;max-width:300px}
+
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:920px){.pg{grid-template-columns:minmax(0,1fr)}.rack{position:static}}
+@media (max-width:640px){.two{grid-template-columns:minmax(0,1fr)}h1{font-size:27px}.k-val{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <div>
+      <h1>Ritual Agent Simulator</h1>
+      <p class="lede">An actor–critic agent in a world where its actions change nothing. When it expects harm and nothing happens, the relief is credited to whatever it just did.</p>
+    </div>
+    <div class="meta"><span class="chip-note">Unpublished</span><span>Ben-Artzi, Erdinast, Swissa, Eldar &amp; Shahar · manuscript under review</span></div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" type="button" id="tab-playground" aria-controls="panel-playground" aria-selected="true">Playground</button>
+    <button class="tab" role="tab" type="button" id="tab-paper" aria-controls="panel-paper" aria-selected="false">Paper simulations</button>
+    <button class="tab" role="tab" type="button" id="tab-map" aria-controls="panel-map" aria-selected="false">Parameter map</button>
+    <button class="tab" role="tab" type="button" id="tab-model" aria-controls="panel-model" aria-selected="false">Model</button>
+  </nav>
+</header>
+
+<main>
+<section id="panel-playground" class="pg" role="tabpanel" aria-labelledby="tab-playground">
+  <aside class="rack" aria-label="Parameters">
+    <div class="grp"><p class="eyebrow">Scenarios</p><div class="presets" id="presets"></div></div>
+    <div class="rack-params" id="rack-params"></div>
+  </aside>
+  <div class="display">
+    <div class="kpis">
+      <div class="kpi"><span class="k-label"><i class="dot anx"></i>Ritual frequency · anxious</span><span class="k-val" id="k-anx">–</span><span class="k-sub" id="k-anx-sub">&nbsp;</span></div>
+      <div class="kpi"><span class="k-label"><i class="dot calm"></i>Ritual frequency · calm</span><span class="k-val" id="k-calm">–</span><span class="k-sub" id="k-calm-sub">&nbsp;</span></div>
+      <div class="kpi"><span class="k-label">Time in anxious state</span><span class="k-val" id="k-time">–</span><span class="k-sub" id="k-time-sub">&nbsp;</span></div>
+      <div class="kpi"><span class="k-label">Anxious episode length</span><span class="k-val" id="k-ep">–</span><span class="k-sub" id="k-ep-sub">&nbsp;</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="readout" id="readout"></div>
+        <div class="play">
+          <button class="btn primary" id="play" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="play-ico" d="M4 2.5v11l9-5.5z"/></svg><span id="play-lbl">Play</span></button>
+          <select id="speed" aria-label="Playback speed"><option value="30">Slow</option><option value="100" selected>Normal</option><option value="300">Fast</option></select>
+        </div>
+      </div>
+      <canvas id="montage" role="img" aria-label="Time-aligned traces: threat belief and chosen action"></canvas>
+      <div class="legend">
+        <span><i class="sw wash"></i>Anxious period</span>
+        <span><i class="dot anx"></i>Anxious step</span>
+        <span><i class="dot calm"></i>Calm step</span>
+        <span><span class="glyph">▼</span>Trigger</span>
+        <span><span class="glyph">×</span>Catastrophe</span>
+        <span id="cat-count" class="muted"></span>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card"><div class="card-head"><h3 class="card-title"><i class="dot calm"></i>Action choice · calm</h3><span class="card-sub" id="n-calm"></span></div><canvas id="bars-calm" role="img" aria-label="Share of calm steps per action"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title"><i class="dot anx"></i>Action choice · anxious</h3><span class="card-sub" id="n-anx"></span></div><canvas id="bars-anx" role="img" aria-label="Share of anxious steps per action"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="readout" id="readout2"></div></div>
+      <canvas id="montage2" role="img" aria-label="Time-aligned traces: prediction error, learning step and learned action tendency"></canvas>
+      <div class="legend"><span><i class="dot anx"></i>Anxious step</span><span><i class="dot calm"></i>Calm step</span><span><i class="ln anx"></i><span id="pol-lbl">Most chosen action when anxious</span></span><span><i class="ln"></i>Other actions</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="panel-paper" role="tabpanel" aria-labelledby="tab-paper" hidden>
+
+  <article class="sim">
+    <div><p class="eyebrow">Simulation 1</p><h2>Automatic credit assignment drives ritual acquisition</h2><p class="desc">Two groups that differ only in η. The world is safe: catastrophes never happen.</p></div>
+    <div class="paper-bar"><span class="sub-h">Example agent</span><span class="muted">The same agent (same random seed), once with low and once with high η.</span><button class="btn small" type="button" data-ex>Another example</button><span class="muted" id="ex-seed"></span></div>
+    <div class="two">
+      <div class="card"><div class="card-head"><h3 class="card-title">Example agent · low credit assignment</h3><span class="card-sub">η = 0.01</span></div><canvas id="s1-lo" role="img" aria-label="Example low credit assignment agent"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title">Example agent · high credit assignment</h3><span class="card-sub">η = 0.1</span></div><canvas id="s1-hi" role="img" aria-label="Example high credit assignment agent"></canvas></div>
+    </div>
+    <div class="paper-bar"><span class="sub-h">Groups</span><label for="n-1">Agents per group</label><select id="n-1" data-sim="1"><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option></select><button class="btn" type="button" data-rerun="1">Run again with new agents</button></div>
+    <div class="split">
+      <div class="card"><div class="card-head"><h3 class="card-title">Ritual frequency by group</h3><div class="legend" style="margin:0"><span><i class="dot calm"></i>Calm</span><span><i class="dot anx"></i>Anxious</span><span><i class="dia"></i>Paper median</span></div></div><canvas id="s1-box" role="img" aria-label="Box plots of ritual frequency by group and state"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title">Paper vs this run</h3><span class="card-sub">median ritual frequency</span></div><div class="tbl-wrap"><table class="cmp" id="s1-tab"></table></div></div>
+    </div>
+  </article>
+
+  <article class="sim">
+    <div><p class="eyebrow">Simulation 2</p><h2>Rare, severe catastrophes maintain the ritual</h2><p class="desc">Each group changes one feature of the feared event. Every agent has high credit assignment (η = 0.1).</p></div>
+    <div class="paper-bar"><span class="sub-h">Groups</span><label for="n-2">Agents per group</label><select id="n-2" data-sim="2"><option value="50">50</option><option value="100" selected>100</option><option value="200">200</option></select><button class="btn" type="button" data-rerun="2">Run again with new agents</button></div>
+    <div class="split">
+      <div class="card"><div class="card-head"><h3 class="card-title">Ritual frequency by manipulation</h3><div class="legend" style="margin:0"><span><i class="dot anx"></i>Anxious</span><span><i class="dot calm"></i>Calm</span><span><i class="dia"></i>Paper</span></div></div><canvas id="s2-bars" role="img" aria-label="Mean ritual frequency by manipulation with 95% intervals"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title">Paper vs this run</h3><span class="card-sub">mean ritual frequency</span></div><div class="tbl-wrap"><table class="cmp" id="s2-tab"></table></div></div>
+    </div>
+    <div class="two">
+      <div class="card"><div class="card-head"><h3 class="card-title">Catastrophe frequency</h3><span class="card-sub">freq(c) ~ Beta(1, 1) group</span></div><canvas id="s2-freq" role="img" aria-label="Ritual frequency against catastrophe frequency"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title">Catastrophe valence</h3><span class="card-sub">v(harm) ~ N(−50, 30) group</span></div><canvas id="s2-val" role="img" aria-label="Ritual frequency against catastrophe valence"></canvas></div>
+    </div>
+  </article>
+
+  <article class="sim">
+    <div><p class="eyebrow">Simulation 3</p><h2>Cheap, harm-related actions become the ritual</h2><p class="desc">In each sample the ten actions differ in one property, repetition cost (prₐ) or associability (βₐ), and all agents share the same ten values. How often is each action chosen in the anxious state?</p></div>
+    <div class="paper-bar"><span class="sub-h">Samples</span><label for="n-3">Agents per sample</label><select id="n-3" data-sim="3"><option value="100">100</option><option value="200" selected>200</option><option value="400">400</option></select><button class="btn" type="button" data-rerun="3">Run again with new agents</button><label class="chk" for="s3-zeros"><input type="checkbox" id="s3-zeros">Count agents that never chose an action as 0</label></div>
+    <div class="two">
+      <div class="card"><div class="card-head"><h3 class="card-title">Repetition cost</h3><span class="card-sub" id="s3-c-sub"></span></div><canvas id="s3-cost" role="img" aria-label="Ritual frequency of each action against its repetition cost"></canvas></div>
+      <div class="card"><div class="card-head"><h3 class="card-title">Associability</h3><span class="card-sub" id="s3-a-sub"></span></div><canvas id="s3-assoc" role="img" aria-label="Ritual frequency of each action against its associability"></canvas></div>
+    </div>
+  </article>
+</section>
+
+<section id="panel-map" role="tabpanel" aria-labelledby="tab-map" hidden>
+  <div class="card map-wrap">
+    <div class="map-ctl">
+      <label class="fld">Horizontal axis<select id="map-x"></select></label>
+      <label class="fld">Vertical axis<select id="map-y"></select></label>
+      <label class="fld">Measure<select id="map-m"><option value="anx">Ritual frequency · anxious</option><option value="calm">Ritual frequency · calm</option><option value="time">Time in anxious state</option></select></label>
+      <label class="fld">Grid<select id="map-res"><option value="8">8 × 8</option><option value="12" selected>12 × 12</option><option value="16">16 × 16</option><option value="20">20 × 20</option></select></label>
+      <label class="fld">Agents per cell<select id="map-k"><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select></label>
+      <button class="btn primary" id="map-go" type="button">Compute</button>
+      <div class="progress" aria-hidden="true"><i id="map-prog"></i></div>
+    </div>
+    <p class="card-sub" style="margin:10px 0 6px">All other parameters come from the Playground. The ring marks the Playground’s current setting.</p>
+    <canvas id="map" role="img" aria-label="Heat map of the chosen measure over two parameters"></canvas>
+    <div class="map-legend" id="map-legend"></div>
+  </div>
+</section>
+
+<section id="panel-model" role="tabpanel" aria-labelledby="tab-model" hidden>
+  <h2 class="mtitle">One time step</h2>
+  <div class="steps">
+    <div class="step"><span class="n">1 · Eq. 2–3</span><h3>Threat belief</h3><p>Triggers push the harm signal h up; it relaxes back toward 0. p(harm) is its scaled logistic.</p></div>
+    <div class="step"><span class="n">2 · Eq. 5</span><h3>State</h3><p>Anxious when p(harm) exceeds the threshold, calm otherwise. Each state has its own policy.</p></div>
+    <div class="step"><span class="n">3 · Eq. 4</span><h3>Expectation</h3><p>The critic’s value is the expected harm: V = p(harm) · v(harm).</p></div>
+    <div class="step"><span class="n">4 · Eq. 6–7</span><h3>Action</h3><p>One of ten actions, by softmax over propensities θ minus accumulated repetition cost.</p></div>
+    <div class="step"><span class="n">5 · Eq. 1</span><h3>Outcome</h3><p>A catastrophe with probability freq(c), otherwise nothing. The action has no influence.</p></div>
+    <div class="step"><span class="n">6 · Eq. 8–9</span><h3>Prediction error</h3><p>A = r − V. When harm was expected and nothing happened, A &gt; 0 and the chosen action is strengthened.</p></div>
+    <div class="step"><span class="n">7 · Eq. 10</span><h3>Relief</h3><p>The more confident the choice, the faster the threat belief relaxes.</p></div>
+  </div>
+
+  <h2 class="mtitle">Equations</h2>
+  <div class="eqs">
+    <div class="eq"><span class="no">[1]</span><div class="m"><math display="block"><mi>r</mi><mo>=</mo><mrow><mo>{</mo><mtable><mtr><mtd><mi>v</mi><mo stretchy="false">(</mo><mtext>harm</mtext><mo stretchy="false">)</mo></mtd><mtd><mtext>&#160;with probability freq(c)</mtext></mtd></mtr><mtr><mtd><mn>0</mn></mtd><mtd><mtext>&#160;otherwise</mtext></mtd></mtr></mtable></mrow></math></div><span class="cap">Reward, regardless of the action</span></div>
+    <div class="eq"><span class="no">[2]</span><div class="m"><math display="block"><msub><mi>h</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>h</mi><mi>t</mi></msub><mo>+</mo><msub><mtext>trigger</mtext><mi>t</mi></msub><mo stretchy="false">)</mo><mo>·</mo><msub><mtext>relax rate</mtext><mi>t</mi></msub></math></div><span class="cap">Harm signal</span></div>
+    <div class="eq"><span class="no">[3]</span><div class="m"><math display="block"><mi>p</mi><mo stretchy="false">(</mo><mtext>harm</mtext><msub><mo stretchy="false">)</mo><mi>t</mi></msub><mo>=</mo><mfrac><mn>2</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>h</mi><mi>t</mi></msub></mrow></msup></mrow></mfrac><mo>−</mo><mn>1</mn></math></div><span class="cap">Threat belief</span></div>
+    <div class="eq"><span class="no">[4]</span><div class="m"><math display="block"><msub><mi>V</mi><mi>t</mi></msub><mo>=</mo><mi>p</mi><mo stretchy="false">(</mo><mtext>harm</mtext><msub><mo stretchy="false">)</mo><mi>t</mi></msub><mo>·</mo><mi>v</mi><mo stretchy="false">(</mo><mtext>harm</mtext><mo stretchy="false">)</mo></math></div><span class="cap">Critic value</span></div>
+    <div class="eq"><span class="no">[5]</span><div class="m"><math display="block"><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mrow><mo>{</mo><mtable><mtr><mtd><mtext>Anxious</mtext></mtd><mtd><mtext>&#160;if&#160;</mtext><mi>p</mi><mo stretchy="false">(</mo><mtext>harm</mtext><msub><mo stretchy="false">)</mo><mi>t</mi></msub><mo>&gt;</mo><mtext>threshold</mtext></mtd></mtr><mtr><mtd><mtext>Calm</mtext></mtd><mtd><mtext>&#160;otherwise</mtext></mtd></mtr></mtable></mrow></math></div><span class="cap">Internal state</span></div>
+    <div class="eq"><span class="no">[6]</span><div class="m"><math display="block"><mtext>cost</mtext><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><msub><mo stretchy="false">)</mo><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>f</mi><mi>p</mi></msub><mo stretchy="false">)</mo><mo>·</mo><mtext>cost</mtext><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><msub><mo stretchy="false">)</mo><mi>t</mi></msub><mo>−</mo><mi>p</mi><msub><mi>r</mi><mi>a</mi></msub></math></div><span class="cap">Repetition cost (prₐ charged to the chosen action)</span></div>
+    <div class="eq" id="eq7"><span class="no">[7]</span><div class="m"><math display="block"><mi>π</mi><mo stretchy="false">(</mo><msub><mi>a</mi><mi>i</mi></msub><msub><mo stretchy="false">)</mo><mi>t</mi></msub><mo>=</mo><mfrac><msup><mi>e</mi><mrow><msub><mi>θ</mi><mi>t</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo><mo>+</mo><msub><mtext>cost</mtext><mi>t</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></msup><mrow><msub><mo>∑</mo><mi>j</mi></msub><msup><mi>e</mi><mrow><msub><mi>θ</mi><mi>t</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>j</mi></msub><mo stretchy="false">)</mo><mo>+</mo><msub><mtext>cost</mtext><mi>t</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>j</mi></msub><mo stretchy="false">)</mo></mrow></msup></mrow></mfrac></math></div><span class="cap">Softmax policy</span></div>
+    <div class="eq"><span class="no">[8]</span><div class="m"><math display="block"><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><msub><mi>r</mi><mi>t</mi></msub><mo>−</mo><msub><mi>V</mi><mi>t</mi></msub></math></div><span class="cap">Advantage (prediction error)</span></div>
+    <div class="eq"><span class="no">[9]</span><div class="m"><math display="block"><msub><mi>θ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>θ</mi><mi>t</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>+</mo><mi>η</mi><mo>·</mo><msub><mi>A</mi><mi>t</mi></msub><mo>·</mo><msub><mi>β</mi><mi>a</mi></msub><mo>·</mo><mi>π</mi><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo><mo>·</mo><mo stretchy="false">[</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></math></div><span class="cap">Actor update</span></div>
+    <div class="eq"><span class="no">[10]</span><div class="m"><math display="block"><msub><mtext>relax rate</mtext><mi>t</mi></msub><mo>=</mo><mtext>relax</mtext><mo>·</mo><mo stretchy="false">[</mo><mn>1</mn><mo>−</mo><mi>π</mi><mo stretchy="false">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">]</mo></math></div><span class="cap">Confidence speeds relief</span></div>
+  </div>
+
+  <h2 class="mtitle">Parameters</h2>
+  <div class="card tbl-wrap" style="max-width:880px">
+    <table class="cmp">
+      <thead><tr><th>Parameter</th><th style="text-align:left">Meaning</th><th>Paper value</th></tr></thead>
+      <tbody>
+        <tr><td class="num">η</td><td style="text-align:left">Automatic credit assignment</td><td class="num">0.01 / 0.1</td></tr>
+        <tr><td class="num">relax</td><td style="text-align:left">Spontaneous relaxation</td><td class="num">0.95</td></tr>
+        <tr><td class="num">threshold</td><td style="text-align:left">Calm → anxious boundary on p(harm)</td><td class="num">0.05</td></tr>
+        <tr><td class="num">trigger</td><td style="text-align:left">Trigger intensity, every 100 steps</td><td class="num">5</td></tr>
+        <tr><td class="num">freq(c)</td><td style="text-align:left">Catastrophe frequency</td><td class="num">0; Beta(1,1000) or Beta(1,1)</td></tr>
+        <tr><td class="num">v(harm)</td><td style="text-align:left">Catastrophe valence</td><td class="num">−100; N(−100,5) or N(−50,30)</td></tr>
+        <tr><td class="num">prₐ</td><td style="text-align:left">Repetition cost per action</td><td class="num">0* ; |N(0.5,0.5)|, one per action</td></tr>
+        <tr><td class="num">fp</td><td style="text-align:left">Decay of accumulated cost</td><td class="num">0.01</td></tr>
+        <tr><td class="num">βₐ</td><td style="text-align:left">Associability per action</td><td class="num">1* ; Beta(1,1), one per action</td></tr>
+      </tbody>
+    </table>
+    <p class="card-sub" style="margin:8px 0 0">* Not stated in the manuscript for Simulations 1–2; taken from the simulation code.</p>
+  </div>
+
+  <h2 class="mtitle">Implementation notes</h2>
+  <ul class="notes">
+    <li>Ten actions; propensities θ and costs start at 0; calm and anxious states keep separate policies.</li>
+    <li>Triggers arrive on the first step and then on every multiple of the trigger interval (steps 100, 200, …), as in the simulation code.</li>
+    <li>A catastrophe changes the reward only. It does not feed back into the threat belief.</li>
+    <li>Repetition cost is charged to the chosen action in the current state; all costs decay by fp each step.</li>
+    <li>Ritual frequency is the share of a state’s steps taken by that state’s most-chosen action.</li>
+    <li>In Simulation 3 all agents in a sample share one set of ten action values, read from Figure 3. As in the simulation code, each agent draws its own v(harm) ~ N(−100,5) and freq(c) ~ Beta(1,1000). Ritual frequency there is each action’s share of anxious-state choices, averaged over agents as in the analysis code.</li>
+  </ul>
+</section>
+</main>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(()=>{
+'use strict';
+const NA=10;
+const $=(s,el=document)=>el.querySelector(s);
+const $$=(s,el=document)=>[...el.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const pct=(v,d=0)=>Number.isFinite(v)?(v*100).toFixed(d)+'%':'–';
+const signed=(v,d=1)=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(d);
+const mean=a=>{let s=0;for(const v of a)s+=v;return a.length?s/a.length:NaN;};
+const sd=a=>{const m=mean(a);let s=0;for(const v of a)s+=(v-m)*(v-m);return a.length>1?Math.sqrt(s/(a.length-1)):0;};
+const quantile=(s,q)=>{const p=(s.length-1)*q,b=Math.floor(p),r=p-b;return b+1<s.length?s[b]+r*(s[b+1]-s[b]):s[b];};
+function ols(xs,ys){const mx=mean(xs),my=mean(ys);let sxy=0,sxx=0;for(let i=0;i<xs.length;i++){sxy+=(xs[i]-mx)*(ys[i]-my);sxx+=(xs[i]-mx)*(xs[i]-mx);}const b=sxx?sxy/sxx:0;return{b,a:my-b*mx};}
+function niceTicks(min,max,count){const raw=(max-min)/count,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p,st=(f<1.5?1:f<3?2:f<7?5:10)*p;const out=[];for(let v=Math.ceil(min/st-1e-9)*st;v<=max+1e-9;v+=st)out.push(+v.toFixed(10));return out;}
+
+/* ---------- random numbers ---------- */
+function mulberry32(a){return function(){a|=0;a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
+function hashSeed(a,b){let h=(Math.imul(a|0,0x9E3779B1)^Math.imul((b|0)+0x632BE5AB,0x85EBCA77))>>>0;h^=h>>>16;h=Math.imul(h,0x7FEB352D)>>>0;h^=h>>>15;return h>>>0;}
+function gauss(r){let u=0;while(u===0)u=r();const v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function gammaS(r,k){if(k<1){const u=r()||1e-12;return gammaS(r,k+1)*Math.pow(u,1/k);}const d=k-1/3,c=1/Math.sqrt(9*d);for(;;){let x,v;do{x=gauss(r);v=1+c*x;}while(v<=0);v=v*v*v;const u=r();if(u<1-0.0331*x*x*x*x)return d*v;if(Math.log(u)<0.5*x*x+d*(1-v+Math.log(v)))return d*v;}}
+function betaS(r,a,b){const x=gammaS(r,a),y=gammaS(r,b);return x/(x+y);}
+
+/* ---------- the model (Eqs. 1–10) ---------- */
+const DEFAULTS={eta:0.1,relax:0.95,thr:0.05,trig:5,period:100,freq:0,vharm:-100,fp:0.01,T:500,seed:7,beta:Array(NA).fill(1),pr:Array(NA).fill(0)};
+const cloneP=P=>({...P,beta:[...P.beta],pr:[...P.pr]});
+/* Trigger on the first step and on every multiple of the interval (R: timestep %% interval == 0 | timestep == 1). t is 0-based. */
+const isTrig=(t,period)=>t===0||(t+1)%period===0;
+const nextTrig=(t,period)=>t===0?Math.max(1,period-1):t+period;
+
+function simulate(P,seed,rec){
+  const T=P.T|0,n=NA,rA=mulberry32(hashSeed(seed,1)),rC=mulberry32(hashSeed(seed,2));
+  const th=new Float64Array(2*n),cost=new Float64Array(2*n),pi=new Float64Array(n),cnt=new Int32Array(2*n);
+  const decay=1-P.fp;let h=0;
+  const R=rec?{ph:new Float32Array(T),st:new Uint8Array(T),act:new Uint8Array(T),adv:new Float32Array(T),upd:new Float32Array(T),cat:new Uint8Array(T),pol:new Float32Array(T*2*n)}:null;
+  for(let t=0;t<T;t++){
+    const ph=2/(1+Math.exp(-h))-1;                     // Eq. 3
+    const s=ph>=P.thr?1:0,o=s*n;                        // Eq. 5 (>= as in the simulation code)
+    const V=ph*P.vharm;                                 // Eq. 4
+    let m=-Infinity;
+    for(let i=0;i<n;i++){const z=th[o+i]+cost[o+i];pi[i]=z;if(z>m)m=z;}
+    let S=0;for(let i=0;i<n;i++){pi[i]=Math.exp(pi[i]-m);S+=pi[i];}   // Eq. 7
+    let u=rA()*S,a=n-1;for(let i=0;i<n;i++){u-=pi[i];if(u<0){a=i;break;}}
+    const pa=pi[a]/S;
+    const cat=P.freq>0&&rC()<P.freq;                    // Eq. 1
+    const A=(cat?P.vharm:0)-V;                          // Eq. 8
+    const dth=P.eta*A*P.beta[a]*pa*(1-pa);th[o+a]+=dth; // Eq. 9
+    if(decay!==1)for(let i=0;i<2*n;i++)cost[i]*=decay;  // Eq. 6
+    cost[o+a]-=P.pr[a];
+    h=(h+(isTrig(t,P.period)?P.trig:0))*P.relax*(1-pa); // Eqs. 2 and 10
+    cnt[o+a]++;
+    if(R){
+      R.ph[t]=ph;R.st[t]=s;R.act[t]=a;R.adv[t]=A;R.upd[t]=dth;R.cat[t]=cat?1:0;
+      for(let ss=0;ss<2;ss++){const oo=ss*n;let mm=-Infinity;for(let i=0;i<n;i++){const z=th[oo+i]+cost[oo+i];if(z>mm)mm=z;}
+        let SS=0;for(let i=0;i<n;i++)SS+=Math.exp(th[oo+i]+cost[oo+i]-mm);
+        for(let i=0;i<n;i++)R.pol[(t*2+ss)*n+i]=Math.exp(th[oo+i]+cost[oo+i]-mm)/SS;}
+    }
+  }
+  return{cnt,R};
+}
+function summarize(cnt,T){const r={T};for(const s of[0,1]){let tot=0,mx=-1,am=-1;for(let i=0;i<NA;i++){const c=cnt[s*NA+i];tot+=c;if(c>mx){mx=c;am=i;}}r[s]={tot,freq:tot?mx/tot:NaN,act:tot?am:-1};}r.timeAnx=T?r[1].tot/T:NaN;return r;}
+function countsUpTo(R,upto){const c=new Int32Array(2*NA);for(let t=0;t<upto;t++)c[R.st[t]*NA+R.act[t]]++;return c;}
+function episodes(R,P,upto){if(P.trig<=0)return[];const out=[];for(let k=0;k*P.period<upto;k++){let c=0;const e=Math.min(upto,(k+1)*P.period);for(let t=k*P.period;t<e;t++)c+=R.st[t];out.push(c);}return out;}
+function runGroup(n,seed,make){const rs=mulberry32(seed),out=[];for(let i=0;i<n;i++){const P=make(rs);const s=hashSeed(seed,i+101);const sm=summarize(simulate(P,s,false).cnt,P.T);out.push({P,seed:s,calm:sm[0].freq,anx:sm[1].freq,act:sm[1].act,timeAnx:sm.timeAnx,nCalm:sm[0].tot,nAnx:sm[1].tot});}return out;}
+/* ---------- theme and canvas helpers ---------- */
+let TH={};
+function isDark(){const a=document.documentElement.getAttribute('data-theme');if(a==='dark')return true;if(a==='light')return false;return matchMedia('(prefers-color-scheme: dark)').matches;}
+function readTheme(){const s=getComputedStyle(document.documentElement),g=k=>s.getPropertyValue(k).trim();
+  TH={panel:g('--panel'),sunk:g('--sunk'),ink:g('--ink'),ink2:g('--ink-2'),muted:g('--muted'),line:g('--line'),lineStrong:g('--line-strong'),anx:g('--anx'),anxWash:g('--anx-wash'),calm:g('--calm'),calmWash:g('--calm-wash'),mono:g('--f-mono')||'monospace',body:g('--f-body')||'sans-serif',dark:isDark()};}
+function setupCanvas(cv,H){const dpr=Math.min(window.devicePixelRatio||1,2.5);const w=Math.max(240,cv.clientWidth||cv.parentElement.clientWidth);cv.style.height=H+'px';
+  const W=Math.round(w*dpr),HH=Math.round(H*dpr);if(cv.width!==W)cv.width=W;if(cv.height!==HH)cv.height=HH;
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,H);ctx.lineCap='round';ctx.lineJoin='round';return{ctx,w,h:H};}
+function hline(ctx,x0,x1,y,col,lw=1){ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x0,Math.round(y)+.5);ctx.lineTo(x1,Math.round(y)+.5);ctx.stroke();}
+function vline(ctx,x,y0,y1,col,lw=1){ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(Math.round(x)+.5,y0);ctx.lineTo(Math.round(x)+.5,y1);ctx.stroke();}
+function frame(ctx,box,o){
+  const X=v=>box.l+(v-o.x.min)/(o.x.max-o.x.min)*(box.r-box.l);
+  const Y=v=>box.b-(v-o.y.min)/(o.y.max-o.y.min)*(box.b-box.t);
+  ctx.font=`10.5px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(const v of o.y.ticks){const y=Y(v);hline(ctx,box.l,box.r,y,TH.line);ctx.fillStyle=TH.muted;ctx.fillText(o.y.fmt(v),box.l-7,y);}
+  hline(ctx,box.l,box.r,box.b,TH.lineStrong);
+  if(o.x.ticks){ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle=TH.muted;for(const v of o.x.ticks)ctx.fillText(o.x.fmt(v),X(v),box.b+6);}
+  if(o.x.title){ctx.font=`11.5px ${TH.body}`;ctx.fillStyle=TH.ink2;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(o.x.title,(box.l+box.r)/2,box.b+24);}
+  if(o.y.title){ctx.save();ctx.translate(11,(box.t+box.b)/2);ctx.rotate(-Math.PI/2);ctx.font=`11.5px ${TH.body}`;ctx.fillStyle=TH.ink2;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(o.y.title,0,0);ctx.restore();}
+  return{X,Y};
+}
+function refLine(ctx,box,y,label){ctx.save();ctx.globalAlpha=.8;hline(ctx,box.l,box.r,y,TH.muted);ctx.globalAlpha=1;if(label){ctx.font=`10px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(label,box.r-2,y-3);}ctx.restore();}
+function barPath(ctx,x,y,w,h,r){ctx.beginPath();if(h<=0.5){ctx.rect(x,y-.5,w,1);return;}r=Math.min(r,h,w/2);ctx.moveTo(x,y+h);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h);ctx.closePath();}
+function diamond(ctx,x,y,s){ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s,y);ctx.lineTo(x,y+s);ctx.lineTo(x-s,y);ctx.closePath();ctx.fillStyle=TH.panel;ctx.fill();ctx.strokeStyle=TH.ink;ctx.lineWidth=1.6;ctx.stroke();}
+
+/* ---------- tooltips ---------- */
+const tip=$('#tip');
+function showTip(html,px,py){tip.innerHTML=html;tip.hidden=false;const tw=tip.offsetWidth,th=tip.offsetHeight;let x=px+14,y=py-th-12;
+  const maxX=window.scrollX+document.documentElement.clientWidth-tw-8;if(x>maxX)x=Math.max(window.scrollX+8,px-tw-14);if(y<window.scrollY+4)y=py+18;tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.hidden=true;}
+function attachHits(cv){cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,hs=cv._hits||[];let hit=null;
+  for(let i=hs.length-1;i>=0;i--){const h=hs[i];if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h){hit=h;break;}}
+  if(hit)showTip(hit.html,e.pageX,e.pageY);else hideTip();});cv.addEventListener('pointerleave',hideTip);}
+
+/* ---------- shared bar chart (action proportions) ---------- */
+function drawActionBars(ctx,box,counts,s,stateName,hits,opt={}){
+  const tot=counts.reduce((a,b)=>a+b,0);const col=s?TH.anx:TH.calm;
+  const Y=v=>box.b-v*(box.b-box.t);
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(const v of opt.ticks||[0,.5,1]){hline(ctx,box.l,box.r,Y(v),TH.line);ctx.fillStyle=TH.muted;ctx.fillText(Math.round(v*100)+'%',box.l-6,Y(v));}
+  hline(ctx,box.l,box.r,box.b,TH.lineStrong);
+  const slot=(box.r-box.l)/NA,bw=Math.min(24,slot*.62);let mi=-1,mv=-1;
+  for(let i=0;i<NA;i++){const v=tot?counts[i]/tot:0;if(v>mv){mv=v;mi=i;}const x=box.l+slot*(i+.5)-bw/2;ctx.fillStyle=col;barPath(ctx,x,Y(v),bw,Y(0)-Y(v),4);ctx.fill();
+    hits.push({x:x-3,y:box.t,w:bw+6,h:box.b-box.t,html:`Action ${i+1} · ${pct(v,1)} of ${stateName} steps<br>${counts[i]} of ${tot}`});}
+  refLine(ctx,box,Y(.1),opt.chanceLabel===false?'':'uniform');
+  if(opt.labels!==false){ctx.font=`10.5px ${TH.mono}`;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle=TH.muted;for(let i=0;i<NA;i++)ctx.fillText(String(i+1),box.l+slot*(i+.5),box.b+5);}
+  if(tot&&mv>0&&opt.valueLabel!==false){ctx.font=`500 11px ${TH.mono}`;ctx.fillStyle=TH.ink;ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(pct(mv),box.l+slot*(mi+.5),Y(mv)-4);}
+}
+
+/* ================= Playground ================= */
+const PDEF={
+  eta:{label:'Credit assignment',sym:'η',min:0,max:0.3,step:0.005,dp:3},
+  relax:{label:'Relaxation',sym:'relax',min:0.5,max:0.99,step:0.01,dp:2},
+  thr:{label:'Anxiety threshold',sym:'threshold',min:0.01,max:0.5,step:0.01,dp:2},
+  trig:{label:'Trigger intensity',sym:'trigger',min:0,max:10,step:0.5,dp:1},
+  period:{label:'Trigger interval',sym:'steps',min:20,max:250,step:5,dp:0},
+  freq:{label:'Catastrophe frequency',sym:'freq(c)',min:0,max:1,sq:true},
+  vharm:{label:'Catastrophe valence',sym:'v(harm)',min:-150,max:0,step:5,dp:0},
+  fp:{label:'Cost decay',sym:'fp',min:0,max:0.2,step:0.005,dp:3},
+  T:{label:'Time steps',sym:'T',min:100,max:2000,step:50,dp:0},
+};
+const fmtFreq=v=>v===0?'0%':v<0.01?(v*100).toFixed(2)+'%':v<0.1?(v*100).toFixed(1)+'%':(v*100).toFixed(0)+'%';
+const fmtP=(k,v)=>k==='freq'?fmtFreq(v):k==='vharm'?(v<0?'−':'')+Math.abs(v).toFixed(0):v.toFixed(PDEF[k].dp);
+const GROUPS=[['Agent',['eta','relax','thr']],['Triggers',['trig','period']],['World',['freq','vharm']],['Actions',['@beta','@pr','fp']],['Run',['T','@seed']]];
+const ED={beta:{label:'Associability',sym:'βₐ',max:1,def:1,rand:r=>r()},pr:{label:'Repetition cost',sym:'prₐ',max:1.5,def:0,rand:r=>Math.min(1.5,Math.abs(.5+.5*gauss(r)))}};
+const PRESETS=[
+  {id:'high',label:'High credit assignment',set:{}},
+  {id:'low',label:'Low credit assignment',set:{eta:0.01}},
+  {id:'nobelief',label:'No harm belief',set:{trig:0}},
+  {id:'frequent',label:'Frequent catastrophes',set:{freq:0.3}},
+  {id:'mild',label:'Mild catastrophe',set:{vharm:-30}},
+  {id:'costly',label:'Costly repetition',set:{pr:Array(NA).fill(0.5)}},
+];
+const st={P:cloneP(DEFAULTS),runP:null,run:null,preset:'high',playT:null,playing:false,hoverT:null,geo:null};
+
+function buildRack(){
+  const pres=$('#presets');
+  pres.innerHTML=PRESETS.map(p=>`<button type="button" class="preset" data-id="${p.id}" aria-pressed="false"${p.note?` title="${p.note}"`:''}>${p.label}</button>`).join('');
+  pres.addEventListener('click',e=>{const b=e.target.closest('.preset');if(!b)return;const p=PRESETS.find(x=>x.id===b.dataset.id);const seed=st.P.seed,T=st.P.T;
+    st.P=Object.assign(cloneP(DEFAULTS),{seed,T},p.set);if(p.set.pr)st.P.pr=[...p.set.pr];st.preset=p.id;syncRack();rerun();});
+  const host=$('#rack-params');
+  for(const[g,keys]of GROUPS){
+    const sec=document.createElement('div');sec.className='grp';sec.innerHTML=`<p class="eyebrow">${g}</p>`;
+    for(const k of keys){
+      if(k==='@beta'||k==='@pr'){sec.appendChild(buildEditor(k.slice(1)));continue;}
+      if(k==='@seed'){sec.appendChild(buildSeed());continue;}
+      const d=PDEF[k],id='p-'+k,row=document.createElement('div');row.className='prm';
+      row.innerHTML=`<label for="${id}">${d.label}<span class="sym">${d.sym}</span></label><output id="${id}-o" for="${id}"></output><input type="range" id="${id}" min="${d.sq?0:d.min}" max="${d.sq?1000:d.max}" step="${d.sq?1:d.step}">`;
+      const inp=row.querySelector('input');
+      inp.addEventListener('input',()=>{st.P[k]=d.sq?+((inp.value/1000)**2).toFixed(5):+inp.value;$('#'+id+'-o').textContent=fmtP(k,st.P[k]);custom();schedule();});
+      sec.appendChild(row);
+    }
+    host.appendChild(sec);
+  }
+}
+function buildEditor(key){
+  const e=ED[key],w=document.createElement('div');w.className='aed';
+  w.innerHTML=`<div class="aed-head"><span class="lbl">${e.label}<span class="sym">${e.sym}</span></span><span class="aed-tools"><button type="button" class="btn small" data-act="reset">Reset</button><button type="button" class="btn small" data-act="rand">Randomize</button></span></div>
+  <div class="aed-bars" id="ed-${key}" role="group" aria-label="${e.label} per action">${Array.from({length:NA},(_,i)=>`<button type="button" class="aed-col" data-i="${i}"><span class="aed-fill"></span></button>`).join('')}</div>
+  <div class="aed-idx" aria-hidden="true">${Array.from({length:NA},(_,i)=>`<span>${i+1}</span>`).join('')}</div>`;
+  const bars=w.querySelector('.aed-bars');let down=false;
+  const setFrom=ev=>{const r=bars.getBoundingClientRect(),pad=4;const i=clamp(Math.floor((ev.clientX-r.left-pad)/((r.width-2*pad)/NA)),0,NA-1);
+    const v=clamp(1-(ev.clientY-r.top-pad)/(r.height-2*pad),0,1)*e.max;st.P[key][i]=Math.round(v*100)/100;custom();syncEditors();schedule();};
+  bars.addEventListener('pointerdown',ev=>{down=true;bars.setPointerCapture(ev.pointerId);setFrom(ev);ev.preventDefault();});
+  bars.addEventListener('pointermove',ev=>{if(down)setFrom(ev);});
+  bars.addEventListener('pointerup',()=>{down=false;});bars.addEventListener('pointercancel',()=>{down=false;});
+  bars.addEventListener('keydown',ev=>{const b=ev.target.closest('.aed-col');if(!b)return;const d=ev.key==='ArrowUp'?.05:ev.key==='ArrowDown'?-.05:0;if(!d)return;ev.preventDefault();
+    const i=+b.dataset.i;st.P[key][i]=Math.round(clamp(st.P[key][i]+d*e.max,0,e.max)*100)/100;custom();syncEditors();schedule();});
+  w.querySelector('[data-act=reset]').addEventListener('click',()=>{st.P[key]=Array(NA).fill(e.def);custom();syncEditors();schedule();});
+  w.querySelector('[data-act=rand]').addEventListener('click',()=>{const r=mulberry32((Math.random()*4294967295)>>>0);st.P[key]=Array.from({length:NA},()=>Math.round(e.rand(r)*100)/100);custom();syncEditors();schedule();});
+  return w;
+}
+function buildSeed(){
+  const row=document.createElement('div');row.className='seedrow';
+  row.innerHTML=`<label class="lbl" for="p-seed">Random seed</label><span class="seedctl"><input type="number" id="p-seed" min="0" max="999999" step="1"><button type="button" class="btn small" id="seed-new">New agent</button></span>`;
+  row.querySelector('#p-seed').addEventListener('change',e=>{st.P.seed=clamp(Math.round(+e.target.value||0),0,999999);e.target.value=st.P.seed;schedule();});
+  row.querySelector('#seed-new').addEventListener('click',()=>{st.P.seed=Math.floor(Math.random()*999999);$('#p-seed').value=st.P.seed;schedule();});
+  return row;
+}
+function syncEditors(){for(const key of['beta','pr']){const e=ED[key];$$(`#ed-${key} .aed-col`).forEach((b,i)=>{const v=st.P[key][i];b.firstElementChild.style.height=(v/e.max*100)+'%';const t=`Action ${i+1}: ${v.toFixed(2)}`;b.setAttribute('aria-label',`${e.label}, ${t}`);b.title=t;});}
+  const fpRow=$('#p-fp')&&$('#p-fp').closest('.prm');if(fpRow){const off=st.P.pr.every(v=>v===0);fpRow.classList.toggle('off',off);fpRow.title=off?'No effect while all repetition costs are 0':'';}}
+function syncRack(){
+  for(const k in PDEF){const d=PDEF[k],inp=$('#p-'+k);if(!inp)continue;inp.value=d.sq?Math.round(Math.sqrt(st.P[k])*1000):st.P[k];$('#p-'+k+'-o').textContent=fmtP(k,st.P[k]);}
+  $('#p-seed').value=st.P.seed;syncEditors();
+  $$('#presets .preset').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.id===st.preset)));
+}
+const presetP=p=>{const P=Object.assign(cloneP(DEFAULTS),p.set);if(p.set.pr)P.pr=[...p.set.pr];return P;};
+const near=(a,b)=>Math.abs(a-b)<=1e-3*Math.max(1,Math.abs(b));
+function sameAs(P,Q){for(const k of['eta','relax','thr','trig','period','freq','vharm'])if(!near(P[k],Q[k]))return false;
+  for(let i=0;i<NA;i++)if(!near(P.beta[i],Q.beta[i])||!near(P.pr[i],Q.pr[i]))return false;
+  return P.pr.every(v=>v===0)||near(P.fp,Q.fp);}
+function custom(){const hit=PRESETS.find(p=>sameAs(st.P,presetP(p)));st.preset=hit?hit.id:null;$$('#presets .preset').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.id===st.preset)));}
+let pending=false;
+function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;rerun();});}
+function rerun(){stopPlay();st.runP=cloneP(st.P);st.run=simulate(st.runP,st.P.seed,true);st.playT=null;if(current==='playground')renderPG();}
+const uptoNow=()=>st.playT==null?st.runP.T:clamp(Math.floor(st.playT),1,st.runP.T);
+
+function renderPG(){updateKPIs();drawMontage();updateReadout();drawStateBars();}
+
+function updateKPIs(){
+  const R=st.run.R,P=st.runP,upto=uptoNow(),c=countsUpTo(R,upto),sm=summarize(c,upto);
+  for(const s of[0,1]){const k=s?'anx':'calm',S=sm[s],top=S.act>=0?c[s*NA+S.act]:0;
+    $('#k-'+k).textContent=pct(S.freq);
+    $('#k-'+k+'-sub').textContent=S.act>=0?`action ${S.act+1} · ${top} of ${S.tot} steps`:`no ${s?'anxious':'calm'} steps`;}
+  $('#k-time').textContent=pct(sm.timeAnx,1);
+  $('#k-time-sub').textContent=`${sm[1].tot} of ${upto} steps`;
+  const ep=episodes(R,P,upto),seq=ep.length>1&&ep.length<=8,kv=$('#k-ep');
+  kv.textContent=!ep.length?'–':seq?ep.join(' · '):ep.length>1?`${ep[0]} → ${ep[ep.length-1]}`:String(ep[0]);
+  kv.classList.toggle('seq',seq&&ep.length>3);
+  $('#k-ep-sub').textContent=!ep.length?'no triggers':seq?'anxious steps in each episode':ep.length>1?'anxious steps · first → latest episode':'anxious steps · first episode';
+  let nc=0;for(let t=0;t<upto;t++)nc+=R.cat[t];
+  $('#cat-count').textContent=P.freq>0?`${nc} catastrophe${nc===1?'':'s'} so far`:'';
+}
+
+const MB_TOP=[{k:'ph',t:'Threat belief',s:'p(harm)',h:100},{k:'act',t:'Chosen action',s:'actions 1–10',h:130}];
+const MB_BOT=[{k:'adv',t:'Prediction error',s:'Aₜ = r − V',h:72},{k:'upd',t:'Learning step',s:'Δθ = η · A · βₐ · π(1 − π)',h:72},{k:'pol',t:'Learned action tendency · anxious',s:'π(a | anxious)',h:92}];
+function barBand(ctx,b,arr,sts,upto,T,L,pw,X,dx,dp){
+  let mn=0,mx=0;for(let t=0;t<T;t++){const v=arr[t];if(v<mn)mn=v;if(v>mx)mx=v;}
+  if(mx-mn<1e-9)mx=1;
+  const Y=v=>b.bot-(v-mn)/(mx-mn)*b.h,fmt=v=>(v<0?'−':'')+Math.abs(v).toFixed(dp);
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  hline(ctx,L,L+pw,Y(0),TH.lineStrong);ctx.fillStyle=TH.muted;ctx.fillText('0',L-7,Y(0));
+  for(const v of[mx,mn])if(v!==0&&Math.abs(Y(v)-Y(0))>=12){hline(ctx,L,L+pw,Y(v),TH.line);ctx.fillStyle=TH.muted;ctx.fillText(fmt(v),L-7,Y(v));}
+  const bw=Math.max(1,dx*.8),y0=Y(0);
+  for(const s of[0,1]){ctx.fillStyle=s?TH.anx:TH.calm;for(let t=0;t<upto;t++)if(sts[t]===s){const yv=Y(arr[t]),h=Math.abs(yv-y0);if(h<0.4)continue;ctx.fillRect(X(t)-bw/2,Math.min(yv,y0),bw,h);}}
+  return Y;
+}
+function drawMontage(){drawTrack($('#montage'),MB_TOP);drawTrack($('#montage2'),MB_BOT);}
+function drawTrack(cv,bands){
+  const R=st.run.R,P=st.runP,T=P.T,upto=uptoNow();
+  const TT=21,G=12,AX=40;let H=AX;for(const b of bands)H+=b.h+TT+G;
+  const{ctx,w}=setupCanvas(cv,H);
+  const L=44,Rm=12,pw=w-L-Rm,dx=pw/T,X=t=>L+(t+.5)*dx;
+  let y=0;for(const b of bands){b.top=y+TT;b.bot=b.top+b.h;y=b.bot+G;}
+  st.geo={L,dx,T};
+  const xt=niceTicks(0,T,Math.max(3,Math.floor(pw/110)));
+  for(const b of bands){
+    ctx.font=`600 12px ${TH.body}`;ctx.fillStyle=TH.ink;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(b.t,L,b.top-8);
+    const tw=ctx.measureText(b.t).width;ctx.font=`11px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.fillText(b.s,L+tw+8,b.top-8);
+    for(const v of xt)vline(ctx,L+v*dx,b.top,b.bot,TH.line);
+  }
+  const sm=summarize(countsUpTo(R,upto),upto),ra=sm[1].act;
+  const ht=st.hoverT,hov=ht!=null&&ht<upto,sc=hov?(R.st[ht]?TH.anx:TH.calm):null,marks=[];
+  for(const b of bands){
+  if(b.k==='ph'){
+  // threat belief
+  const b1=b,Y1=v=>b1.bot-v*b1.h;
+  ctx.fillStyle=TH.anxWash;
+  for(let t=0;t<upto;){if(R.st[t]){let e=t;while(e<upto&&R.st[e])e++;ctx.fillRect(L+t*dx,b1.top,(e-t)*dx,b1.h);t=e;}else t++;}
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(const v of[0,.5,1]){hline(ctx,L,L+pw,Y1(v),TH.line);ctx.fillStyle=TH.muted;ctx.fillText(v.toFixed(1),L-7,Y1(v));}
+  ctx.save();ctx.globalAlpha=.75;hline(ctx,L,L+pw,Y1(P.thr),TH.anx);ctx.restore();
+  ctx.font=`10px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('threshold',L+pw-2,Y1(P.thr)-3);
+  ctx.strokeStyle=TH.ink;ctx.lineWidth=1.6;ctx.beginPath();for(let t=0;t<upto;t++){const xx=X(t),yy=Y1(R.ph[t]);t?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();
+  if(P.trig>0){ctx.fillStyle=TH.ink2;for(let t=0;t<upto;t=nextTrig(t,P.period)){const xx=X(t);ctx.beginPath();ctx.moveTo(xx-4,b1.top-1);ctx.lineTo(xx+4,b1.top-1);ctx.lineTo(xx,b1.top+5);ctx.closePath();ctx.fill();}}
+  ctx.strokeStyle=TH.ink;ctx.lineWidth=1.6;for(let t=0;t<upto;t++)if(R.cat[t]){const xx=X(t),yy=b1.bot-6;ctx.beginPath();ctx.moveTo(xx-3.5,yy-3.5);ctx.lineTo(xx+3.5,yy+3.5);ctx.moveTo(xx+3.5,yy-3.5);ctx.lineTo(xx-3.5,yy+3.5);ctx.stroke();}
+  if(hov)marks.push([X(ht),Y1(R.ph[ht]),TH.ink]);
+  }else if(b.k==='act'){
+  // chosen action raster
+  const b2=b,rh=b2.h/NA,Y2=i=>b2.top+(i+.5)*rh;
+  if(ra>=0){ctx.fillStyle=TH.anxWash;ctx.fillRect(L,b2.top+ra*rh,pw,rh);ctx.font=`10px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.textAlign='right';ctx.textBaseline='middle';}
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let i=0;i<NA;i++){ctx.fillStyle=i===ra?TH.ink:TH.muted;ctx.fillText(String(i+1),L-7,Y2(i));}
+  hline(ctx,L,L+pw,b2.bot,TH.lineStrong);
+  const r=clamp(dx*.5,1.1,2.8);
+  ctx.globalAlpha=.5;ctx.fillStyle=TH.calm;ctx.beginPath();for(let t=0;t<upto;t++)if(!R.st[t]){const xx=X(t),yy=Y2(R.act[t]);ctx.moveTo(xx+r,yy);ctx.arc(xx,yy,r,0,6.2832);}ctx.fill();
+  ctx.globalAlpha=1;ctx.fillStyle=TH.anx;ctx.beginPath();for(let t=0;t<upto;t++)if(R.st[t]){const xx=X(t),yy=Y2(R.act[t]);ctx.moveTo(xx+r+.4,yy);ctx.arc(xx,yy,r+.4,0,6.2832);}ctx.fill();
+  if(hov)marks.push([X(ht),Y2(R.act[ht]),sc]);
+  }else if(b.k==='adv'||b.k==='upd'){
+  // prediction error / learning step
+  const arr=b.k==='adv'?R.adv:R.upd,Yb=barBand(ctx,b,arr,R.st,upto,T,L,pw,X,dx,b.k==='adv'?0:2);
+  if(hov)marks.push([X(ht),Yb(arr[ht]),sc]);
+  }else if(b.k==='pol'){
+  // anxious-state policy
+  const b5=b,Y5=v=>b5.bot-v*b5.h;
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(const v of[0,.5,1]){hline(ctx,L,L+pw,Y5(v),v===0?TH.lineStrong:TH.line);ctx.fillStyle=TH.muted;ctx.fillText(v.toFixed(1),L-7,Y5(v));}
+  refLine(ctx,{l:L,r:L+pw},Y5(.1),'uniform');
+  const polLine=(i,col,lw)=>{ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.beginPath();for(let t=0;t<upto;t++){const xx=X(t),yy=Y5(R.pol[(t*2+1)*NA+i]);t?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();};
+  for(let i=0;i<NA;i++)if(i!==ra)polLine(i,TH.lineStrong,1.2);
+  $('#pol-lbl').textContent=ra>=0?`Action ${ra+1}, most chosen when anxious`:'Most chosen action when anxious';
+  if(ra>=0){polLine(ra,TH.anx,2);const lt=upto-1,ly=Y5(R.pol[(lt*2+1)*NA+ra]);ctx.font=`500 10.5px ${TH.mono}`;ctx.fillStyle=TH.ink;ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText(`action ${ra+1}`,Math.min(X(lt),L+pw)-2,Math.max(b5.top+12,ly-5));}
+  }
+  }
+
+  // x axis
+  const first=bands[0],last=bands[bands.length-1];
+  ctx.font=`10.5px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.textBaseline='top';
+  for(const v of xt){ctx.textAlign=v===0?'left':v===T?'right':'center';ctx.fillText(String(v),L+v*dx,last.bot+6);}
+  ctx.font=`11.5px ${TH.body}`;ctx.fillStyle=TH.ink2;ctx.textAlign='center';ctx.fillText('time step',L+pw/2,last.bot+22);
+  // playhead and hover
+  if(st.playT!=null&&upto<T)vline(ctx,X(upto-1),first.top,last.bot,TH.ink,1.2);
+  if(hov){vline(ctx,X(ht),first.top,last.bot,TH.ink2,1);
+    for(const[x,yy,c]of marks){ctx.beginPath();ctx.arc(x,yy,4.5,0,6.2832);ctx.fillStyle=TH.panel;ctx.fill();ctx.beginPath();ctx.arc(x,yy,3,0,6.2832);ctx.fillStyle=c;ctx.fill();}}
+}
+function updateReadout(){
+  const t=st.hoverT;let html;
+  if(t==null||t>=uptoNow())html='<span class="muted">Hover the traces to read one time step.</span>';
+  else{const R=st.run.R,s=R.st[t];
+    html=`<span>t = ${t}</span><span>p(harm) ${R.ph[t].toFixed(3)}</span><span class="pill ${s?'anx':'calm'}">${s?'Anxious':'Calm'}</span><span>action ${R.act[t]+1}</span><span>A ${signed(R.adv[t],1)}</span><span>Δθ ${signed(R.upd[t],3)}</span>${R.cat[t]?'<span class="pill cat">catastrophe</span>':''}`;}
+  $('#readout').innerHTML=html;$('#readout2').innerHTML=html;
+}
+function drawStateBars(){
+  const R=st.run.R,upto=uptoNow(),c=countsUpTo(R,upto);
+  for(const s of[0,1]){const cv=$(s?'#bars-anx':'#bars-calm');const{ctx,w}=setupCanvas(cv,190);const hits=[];
+    drawActionBars(ctx,{l:40,r:w-8,t:18,b:190-24},c.slice(s*NA,s*NA+NA),s,s?'anxious':'calm',hits,{ticks:[0,.25,.5,.75,1]});cv._hits=hits;
+    const tot=c.slice(s*NA,s*NA+NA).reduce((a,b)=>a+b,0);$(s?'#n-anx':'#n-calm').textContent=`${tot} steps`;}
+}
+
+/* playback */
+let lastFrame=0;
+function setPlayUI(on){$('#play-lbl').textContent=on?'Pause':'Play';$('#play-ico').setAttribute('d',on?'M4 2.5h3v11H4zM9 2.5h3v11H9z':'M4 2.5v11l9-5.5z');}
+function stopPlay(){st.playing=false;setPlayUI(false);}
+function togglePlay(){
+  if(st.playing){stopPlay();return;}
+  if(st.playT==null||st.playT>=st.runP.T)st.playT=1;
+  st.playing=true;setPlayUI(true);lastFrame=performance.now();requestAnimationFrame(tick);
+}
+function tick(now){
+  if(!st.playing)return;
+  const dt=Math.min(.1,(now-lastFrame)/1000);lastFrame=now;
+  st.playT=Math.min(st.runP.T,st.playT+(+$('#speed').value)*dt);
+  if(st.playT>=st.runP.T){st.playT=null;stopPlay();}
+  if(current==='playground')renderPG();
+  if(st.playing)requestAnimationFrame(tick);
+}
+
+/* ================= Paper simulations ================= */
+const PAPER={s1:{lo:{calm:.13,anx:.18},hi:{calm:.13,anx:.79}},s2:{base:{anx:.77,calm:.13},freq:{anx:.42,calm:.13},val:{anx:.53,calm:.13},slopeF:-8.4,slopeV:-6.5}};
+const paper={n:{1:100,2:100,3:200},seed:{1:2026,2:2026,3:2026},ex:7,res:null};
+function computeSim(k){
+  const R=paper.res,n=paper.n[k],sd0=paper.seed[k],base=cloneP(DEFAULTS),mk=o=>()=>Object.assign(cloneP(base),o);
+  if(k===0){R.exLo=simulate(Object.assign(cloneP(base),{eta:0.01}),paper.ex,true);R.exHi=simulate(Object.assign(cloneP(base),{eta:0.1}),paper.ex,true);}
+  if(k===1){R.lo=runGroup(n,hashSeed(sd0,11),mk({eta:0.01}));R.hi=runGroup(n,hashSeed(sd0,12),mk({eta:0.1}));}
+  if(k===2){
+    R.base=runGroup(n,hashSeed(sd0,21),r=>Object.assign(cloneP(base),{freq:betaS(r,1,1000),vharm:-100+5*gauss(r)}));
+    R.freq=runGroup(n,hashSeed(sd0,22),r=>Object.assign(cloneP(base),{freq:betaS(r,1,1),vharm:-100+5*gauss(r)}));
+    R.val=runGroup(n,hashSeed(sd0,23),r=>Object.assign(cloneP(base),{freq:betaS(r,1,1000),vharm:-50+30*gauss(r)}));}
+  if(k===3){
+    const ag=agents3(n,hashSeed(sd0,30));
+    R.cost=runSample3(n,hashSeed(sd0,31),Object.assign(cloneP(base),{fp:0.01,pr:[...PR3]}),ag);
+    R.assoc=runSample3(n,hashSeed(sd0,32),Object.assign(cloneP(base),{beta:[...BE3]}),ag);}
+}
+function computePaper(){paper.res={};for(const k of[0,1,2,3])computeSim(k);}
+function renderPaper(){for(const k of[0,1,2,3])renderSim(k);}
+function renderSim(k){
+  const R=paper.res;
+  if(k===0){drawMini($('#s1-lo'),R.exLo.R,DEFAULTS);drawMini($('#s1-hi'),R.exHi.R,DEFAULTS);$('#ex-seed').textContent=`seed ${paper.ex}`;return;}
+  if(k===1){
+  drawBox($('#s1-box'),[{label:'Low η (0.01)',items:[{s:0,vals:R.lo.map(a=>a.calm),paper:PAPER.s1.lo.calm},{s:1,vals:R.lo.map(a=>a.anx),paper:PAPER.s1.lo.anx}]},
+    {label:'High η (0.1)',items:[{s:0,vals:R.hi.map(a=>a.calm),paper:PAPER.s1.hi.calm},{s:1,vals:R.hi.map(a=>a.anx),paper:PAPER.s1.hi.anx}]}]);
+  const md=a=>{const s=a.filter(Number.isFinite).sort((x,y)=>x-y);return s.length?quantile(s,.5):NaN;};
+  $('#s1-tab').innerHTML=`<thead><tr><th>Group</th><th>State</th><th>Paper</th><th>This run</th></tr></thead><tbody>
+    <tr><td>Low η</td><td>Calm</td><td class="num">${pct(PAPER.s1.lo.calm)}</td><td class="num">${pct(md(R.lo.map(a=>a.calm)))}</td></tr>
+    <tr><td>Low η</td><td>Anxious</td><td class="num">${pct(PAPER.s1.lo.anx)}</td><td class="num">${pct(md(R.lo.map(a=>a.anx)))}</td></tr>
+    <tr><td>High η</td><td>Calm</td><td class="num">${pct(PAPER.s1.hi.calm)}</td><td class="num">${pct(md(R.hi.map(a=>a.calm)))}</td></tr>
+    <tr><td>High η</td><td>Anxious</td><td class="num">${pct(PAPER.s1.hi.anx)}</td><td class="num">${pct(md(R.hi.map(a=>a.anx)))}</td></tr></tbody>`;
+  return;}
+  if(k===2){
+  const cats=[{label:'Baseline',g:R.base,p:PAPER.s2.base},{label:'Frequent catastrophes',g:R.freq,p:PAPER.s2.freq},{label:'Mild catastrophe',g:R.val,p:PAPER.s2.val}];
+  drawGrouped($('#s2-bars'),cats);
+  const fF=ols(R.freq.map(a=>a.P.freq),R.freq.map(a=>a.anx)),fV=ols(R.val.map(a=>a.P.vharm),R.val.map(a=>a.anx));
+  const mn=a=>mean(a.filter(Number.isFinite));
+  $('#s2-tab').innerHTML=`<thead><tr><th>Group</th><th>Anxious · paper</th><th>this run</th><th>Calm · paper</th><th>this run</th></tr></thead><tbody>
+    ${cats.map(c=>`<tr><td>${c.label}</td><td class="num">${pct(c.p.anx)}</td><td class="num">${pct(mn(c.g.map(a=>a.anx)))}</td><td class="num">${pct(c.p.calm)}</td><td class="num">${pct(mn(c.g.map(a=>a.calm)))}</td></tr>`).join('')}
+    <tr class="sep"><td colspan="5">Change in anxious ritual frequency (percentage points)</td></tr>
+    <tr><td>Per +10% catastrophe frequency</td><td class="num">${signed(PAPER.s2.slopeF)}</td><td class="num">${signed(fF.b*10)}</td><td></td><td></td></tr>
+    <tr><td>Per +10 units valence (milder)</td><td class="num">${signed(PAPER.s2.slopeV)}</td><td class="num">${signed(fV.b*1000)}</td><td></td><td></td></tr></tbody>`;
+  drawScatter($('#s2-freq'),R.freq.map(a=>({x:a.P.freq,anx:a.anx,calm:a.calm})),{min:0,max:1,ticks:[0,.25,.5,.75,1],fmt:v=>Math.round(v*100)+'%',title:'Catastrophe frequency freq(c)',xname:'freq(c)',xval:v=>pct(v,1)});
+  const vx=R.val.map(a=>a.P.vharm),vmin=Math.floor(Math.min(...vx)/25)*25,vmax=Math.ceil(Math.max(...vx)/25)*25;
+  drawScatter($('#s2-val'),R.val.map(a=>({x:a.P.vharm,anx:a.anx,calm:a.calm})),{min:vmin,max:vmax,ticks:niceTicks(vmin,vmax,5),fmt:v=>(v<0?'−':'')+Math.abs(v),title:'Catastrophe valence v(harm)',xname:'v(harm)',xval:v=>(v<0?'−':'')+Math.abs(v).toFixed(1)});
+  return;}
+  const z=$('#s3-zeros').checked,c3=sim3(R.cost,PR3,z),a3=sim3(R.assoc,BE3,z);
+  $('#s3-c-sub').textContent=`one prₐ per action · fp = 0.01 · ${R.cost.length} agents`;
+  $('#s3-a-sub').textContent=`one βₐ per action · ${R.assoc.length} agents`;
+  drawAction3($('#s3-cost'),c3,{title:'Repetition cost prₐ',xname:'cost',paper:'Paper slope: −0.24 [−0.31, −0.18]'});
+  drawAction3($('#s3-assoc'),a3,{title:'Associability βₐ',xname:'associability',paper:'Paper slope: 0.30 [0.22, 0.37]'});
+}
+/* Simulation 3: one value per action, shared by all agents (values read from Figure 3). */
+const PR3=[0.10,0.11,0.18,0.36,0.41,0.67,0.83,0.90,0.94,1.03],BE3=[0.16,0.26,0.48,0.57,0.67,0.70,0.74,0.85,0.89,0.97];
+const TCRIT={1:12.71,2:4.30,3:3.18,4:2.78,5:2.57,6:2.45,7:2.36,8:2.31};
+/* As in the simulation code, each agent has its own v(harm) ~ N(−100,5) and freq(c) ~ Beta(1,1000); both samples use the same agents. */
+function agents3(n,seed){const r=mulberry32(seed),out=[];for(let i=0;i<n;i++)out.push({vharm:-100+5*gauss(r),freq:betaS(r,1,1000)});return out;}
+function runSample3(n,seed,P,ag){const out=[];for(let i=0;i<n;i++){const Q=Object.assign(cloneP(P),ag[i]);const{cnt}=simulate(Q,hashSeed(seed,i+101),false);out.push(Array.from(cnt.slice(NA,2*NA)));}return out;}
+/* As in the analysis code: each agent's share of anxious steps per action, averaged over agents. By default, like the R code, an agent that never chose an action is left out of that action's mean. */
+function sim3(counts,xs,keepZeros){
+  const pts=xs.map((x,a)=>{let s=0,k=0;for(const c of counts){const n=c.reduce((p,q)=>p+q,0);if(!n)continue;if(c[a]>0||keepZeros){s+=c[a]/n;k++;}}return{x,y:k?s/k:NaN,k,a};}).filter(p=>Number.isFinite(p.y));
+  const n=pts.length,fit=ols(pts.map(p=>p.x),pts.map(p=>p.y)),mx=mean(pts.map(p=>p.x));
+  let sse=0,sxx=0;for(const p of pts){sse+=(p.y-fit.a-fit.b*p.x)**2;sxx+=(p.x-mx)**2;}
+  const se=Math.sqrt(sse/Math.max(1,n-2)),t=TCRIT[n-2]||1.96;
+  return{pts,fit,band:x=>t*se*Math.sqrt(1/n+(x-mx)*(x-mx)/sxx),total:counts.length};
+}
+function drawMini(cv,R,P){
+  const bands=[{t:'Threat belief',s:'p(harm)',h:64},{t:'Calm state',s:'action share',h:56},{t:'Anxious state',s:'action share',h:56}];
+  const TT=19,G=10,AXb=20;let H=AXb;for(const b of bands)H+=b.h+TT+G;
+  const{ctx,w}=setupCanvas(cv,H),L=40,Rm=8,pw=w-L-Rm,T=P.T,dx=pw/T,hits=[];
+  let y=0;for(const b of bands){b.top=y+TT;b.bot=b.top+b.h;y=b.bot+G;
+    ctx.font=`600 12px ${TH.body}`;ctx.fillStyle=TH.ink;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(b.t,L,b.top-7);const tw=ctx.measureText(b.t).width;ctx.font=`11px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.fillText(b.s,L+tw+8,b.top-7);}
+  const b1=bands[0],Y1=v=>b1.bot-v*b1.h;
+  ctx.fillStyle=TH.anxWash;for(let t=0;t<T;){if(R.st[t]){let e=t;while(e<T&&R.st[e])e++;ctx.fillRect(L+t*dx,b1.top,(e-t)*dx,b1.h);t=e;}else t++;}
+  ctx.font=`10px ${TH.mono}`;ctx.textAlign='right';ctx.textBaseline='middle';
+  for(const v of[0,1]){hline(ctx,L,L+pw,Y1(v),v?TH.line:TH.lineStrong);ctx.fillStyle=TH.muted;ctx.fillText(v.toFixed(0),L-7,Y1(v));}
+  ctx.strokeStyle=TH.ink;ctx.lineWidth=1.5;ctx.beginPath();for(let t=0;t<T;t++){const xx=L+(t+.5)*dx,yy=Y1(R.ph[t]);t?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();
+  const c=countsUpTo(R,T);
+  drawActionBars(ctx,{l:L,r:L+pw,t:bands[1].top,b:bands[1].bot},c.slice(0,NA),0,'calm',hits,{labels:false,ticks:[0,1],chanceLabel:false});
+  drawActionBars(ctx,{l:L,r:L+pw,t:bands[2].top,b:bands[2].bot},c.slice(NA),1,'anxious',hits,{ticks:[0,1],chanceLabel:false});
+  cv._hits=hits;
+}
+function drawBox(cv,groups){
+  const H=300,{ctx,w}=setupCanvas(cv,H),box={l:50,r:w-14,t:14,b:H-50},hits=[];
+  const f=frame(ctx,box,{x:{min:0,max:1},y:{min:0,max:1,ticks:[0,.25,.5,.75,1],fmt:v=>Math.round(v*100)+'%',title:'Ritual frequency'}});
+  refLine(ctx,box,f.Y(.1),'uniform policy 10%');
+  const gw=(box.r-box.l)/groups.length;
+  groups.forEach((g,gi)=>{const sw=gw/g.items.length;
+    g.items.forEach((it,ii)=>{
+      const cx=box.l+gi*gw+sw*(ii+.5),s=it.vals.filter(Number.isFinite).sort((a,b)=>a-b);if(!s.length)return;
+      const q1=quantile(s,.25),q2=quantile(s,.5),q3=quantile(s,.75),iq=q3-q1,lo=s.find(v=>v>=q1-1.5*iq),hi=[...s].reverse().find(v=>v<=q3+1.5*iq);
+      const col=it.s?TH.anx:TH.calm,wash=it.s?TH.anxWash:TH.calmWash,bw=Math.min(44,sw*.42);
+      ctx.globalAlpha=.4;ctx.fillStyle=col;s.forEach((v,k)=>{const j=((hashSeed(k,gi*10+ii)%1000)/1000-.5)*bw*1.2;ctx.beginPath();ctx.arc(cx+j,f.Y(v),2.2,0,6.2832);ctx.fill();});ctx.globalAlpha=1;
+      ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx,f.Y(lo));ctx.lineTo(cx,f.Y(q1));ctx.moveTo(cx,f.Y(q3));ctx.lineTo(cx,f.Y(hi));ctx.moveTo(cx-6,f.Y(lo));ctx.lineTo(cx+6,f.Y(lo));ctx.moveTo(cx-6,f.Y(hi));ctx.lineTo(cx+6,f.Y(hi));ctx.stroke();
+      ctx.fillStyle=wash;ctx.fillRect(cx-bw/2,f.Y(q3),bw,f.Y(q1)-f.Y(q3));ctx.strokeRect(cx-bw/2,f.Y(q3),bw,Math.max(1,f.Y(q1)-f.Y(q3)));
+      hline(ctx,cx-bw/2,cx+bw/2,f.Y(q2)-.5,TH.ink,2);
+      hits.push({x:cx-bw/2-4,y:f.Y(q3)-4,w:bw+8,h:Math.max(10,f.Y(q1)-f.Y(q3))+8,html:`${g.label} · ${it.s?'anxious':'calm'}<br>median ${pct(q2)} · IQR ${pct(q1)}–${pct(q3)}<br>${s.length} agents`});
+      if(it.paper!=null){const px=cx+bw/2+13,py=f.Y(it.paper);diamond(ctx,px,py,5);hits.push({x:px-8,y:py-8,w:16,h:16,html:`Paper median · ${pct(it.paper)}`});}      ctx.font=`10.5px ${TH.mono}`;ctx.fillStyle=TH.muted;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(it.s?'anxious':'calm',cx,box.b+6);
+    });
+    ctx.font=`600 12px ${TH.body}`;ctx.fillStyle=TH.ink;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(g.label,box.l+gi*gw+gw/2,box.b+26);
+  });
+  cv._hits=hits;
+}
+function drawGrouped(cv,cats){
+  const H=300,{ctx,w}=setupCanvas(cv,H),box={l:50,r:w-14,t:18,b:H-50},hits=[];
+  const f=frame(ctx,box,{x:{min:0,max:1},y:{min:0,max:1,ticks:[0,.25,.5,.75,1],fmt:v=>Math.round(v*100)+'%',title:'Ritual frequency'}});
+  refLine(ctx,box,f.Y(.1),'uniform policy 10%');
+  const gw=(box.r-box.l)/cats.length,bw=Math.min(30,gw*.26);
+  cats.forEach((c,i)=>{const cx=box.l+gw*(i+.5);
+    [[1,-1],[0,1]].forEach(([s,side])=>{
+      const v=c.g.map(a=>s?a.anx:a.calm).filter(Number.isFinite),m=mean(v),ci=1.96*sd(v)/Math.sqrt(v.length),x=side<0?cx-bw-1:cx+1,xm=x+bw/2;
+      ctx.fillStyle=s?TH.anx:TH.calm;barPath(ctx,x,f.Y(m),bw,f.Y(0)-f.Y(m),4);ctx.fill();
+      ctx.strokeStyle=TH.ink2;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(xm,f.Y(m-ci));ctx.lineTo(xm,f.Y(m+ci));ctx.moveTo(xm-4,f.Y(m-ci));ctx.lineTo(xm+4,f.Y(m-ci));ctx.moveTo(xm-4,f.Y(m+ci));ctx.lineTo(xm+4,f.Y(m+ci));ctx.stroke();
+      const pv=s?c.p.anx:c.p.calm,px=side<0?x-9:x+bw+9;diamond(ctx,px,f.Y(pv),5);
+      hits.push({x,y:box.t,w:bw,h:box.b-box.t,html:`${c.label} · ${s?'anxious':'calm'}<br>this run ${pct(m)} (95% CI ${pct(m-ci)}–${pct(m+ci)})<br>paper ${pct(pv)}`});
+      if(s){ctx.font=`500 11px ${TH.mono}`;ctx.fillStyle=TH.ink;ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(pct(m),xm,f.Y(m+ci)-5);}
+    });
+    ctx.font=`600 12px ${TH.body}`;ctx.fillStyle=TH.ink;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(c.label,cx,box.b+8);
+  });
+  cv._hits=hits;
+}
+function drawScatter(cv,data,o){
+  const H=270,{ctx,w}=setupCanvas(cv,H),box={l:50,r:w-14,t:14,b:H-50},hits=[];
+  const f=frame(ctx,box,{x:{min:o.min,max:o.max,ticks:o.ticks,fmt:o.fmt,title:o.title},y:{min:0,max:1,ticks:[0,.25,.5,.75,1],fmt:v=>Math.round(v*100)+'%',title:'Ritual frequency'}});
+  refLine(ctx,box,f.Y(.1),'uniform');
+  for(const s of[0,1]){const col=s?TH.anx:TH.calm,k=s?'anx':'calm',pts=data.filter(d=>Number.isFinite(d[k]));
+    ctx.fillStyle=col;ctx.globalAlpha=.55;for(const d of pts){ctx.beginPath();ctx.arc(f.X(d.x),f.Y(d[k]),3.2,0,6.2832);ctx.fill();hits.push({x:f.X(d.x)-5,y:f.Y(d[k])-5,w:10,h:10,html:`${o.xname} ${o.xval(d.x)}<br>${s?'anxious':'calm'} ritual ${pct(d[k])}`});}
+    ctx.globalAlpha=1;const fit=ols(pts.map(d=>d.x),pts.map(d=>d[k])),x0=Math.min(...pts.map(d=>d.x)),x1=Math.max(...pts.map(d=>d.x));
+    ctx.save();ctx.beginPath();ctx.rect(box.l,box.t,box.r-box.l,box.b-box.t);ctx.clip();ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(f.X(x0),f.Y(fit.a+fit.b*x0));ctx.lineTo(f.X(x1),f.Y(fit.a+fit.b*x1));ctx.stroke();ctx.restore();}
+  cv._hits=hits;
+}
+function drawAction3(cv,d,o){
+  const H=280,{ctx,w}=setupCanvas(cv,H),box={l:52,r:w-14,t:30,b:H-50},hits=[];
+  const xs=d.pts.map(p=>p.x),x0=Math.min(...xs),x1=Math.max(...xs),xmax=Math.max(1,Math.ceil(x1*10)/10);
+  const ymax=Math.max(.2,Math.ceil((Math.max(...d.pts.map(p=>p.y+d.band(p.x))))*20)/20);
+  const f=frame(ctx,box,{x:{min:0,max:xmax,ticks:niceTicks(0,xmax,5),fmt:v=>v.toFixed(2).replace(/0$/,''),title:o.title},y:{min:0,max:ymax,ticks:niceTicks(0,ymax,4),fmt:v=>Math.round(v*100)+'%',title:'Ritual frequency'}});
+  refLine(ctx,box,f.Y(.1),'uniform 10%');
+  const yf=x=>d.fit.a+d.fit.b*x,N=40;
+  ctx.save();ctx.beginPath();ctx.rect(box.l,box.t,box.r-box.l,box.b-box.t);ctx.clip();
+  ctx.fillStyle=TH.anxWash;ctx.beginPath();
+  for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N;i?ctx.lineTo(f.X(x),f.Y(yf(x)+d.band(x))):ctx.moveTo(f.X(x),f.Y(yf(x)+d.band(x)));}
+  for(let i=N;i>=0;i--){const x=x0+(x1-x0)*i/N;ctx.lineTo(f.X(x),f.Y(yf(x)-d.band(x)));}
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle=TH.anx;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(f.X(x0),f.Y(yf(x0)));ctx.lineTo(f.X(x1),f.Y(yf(x1)));ctx.stroke();ctx.restore();
+  for(const p of d.pts){const x=f.X(p.x),y=f.Y(p.y);ctx.beginPath();ctx.arc(x,y,6.5,0,6.2832);ctx.fillStyle=TH.panel;ctx.fill();ctx.beginPath();ctx.arc(x,y,4.5,0,6.2832);ctx.fillStyle=TH.ink;ctx.fill();
+    hits.push({x:x-8,y:y-8,w:16,h:16,html:`Action ${p.a+1} · ${o.xname} ${p.x.toFixed(2)}<br>${pct(p.y,1)} of anxious steps<br>mean over ${p.k} of ${d.total} agents`});}
+  ctx.font=`11px ${TH.body}`;ctx.fillStyle=TH.ink2;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(o.paper,box.l,4);
+  ctx.textAlign='right';ctx.fillStyle=TH.muted;ctx.font=`10.5px ${TH.mono}`;ctx.fillText(`this run: ${signed(d.fit.b,2)}`,box.r,18);
+  cv._hits=hits;
+}
+
+/* ================= Parameter map ================= */
+const MAPP={
+  eta:{label:'Credit assignment η',min:0,max:0.2,f:v=>v.toFixed(3)},
+  relax:{label:'Relaxation',min:0.6,max:0.99,f:v=>v.toFixed(2)},
+  thr:{label:'Anxiety threshold',min:0.01,max:0.4,f:v=>v.toFixed(2)},
+  trig:{label:'Trigger intensity',min:0,max:10,f:v=>v.toFixed(1)},
+  period:{label:'Trigger interval',min:20,max:200,int:true,f:v=>v.toFixed(0)},
+  freq:{label:'Catastrophe frequency',min:0,max:1,f:v=>Math.round(v*100)+'%'},
+  vharm:{label:'Catastrophe valence',min:-150,max:0,f:v=>(v<0?'−':'')+Math.abs(v).toFixed(0)},
+  prAll:{label:'Repetition cost (all actions)',min:0,max:1,f:v=>v.toFixed(2)},
+  betaAll:{label:'Associability (all actions)',min:0,max:1,f:v=>v.toFixed(2)},
+};
+const RAMPS={anx:{light:['#FBEDE7','#F6C9B6','#EE9D7D','#E26B44','#BF4823','#862D12'],dark:['#24170F','#4E2414','#80341B','#BD4D2A','#EA7A54','#F8B99F']},
+  calm:{light:['#E6F3FA','#BCDFF1','#86C3E4','#469FD0','#1F76A8','#114F74'],dark:['#0F1C25','#123650','#185779','#2382B5','#5AB1DD','#A9D8F1']}};
+const hex2rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function rampColor(stops,v){v=clamp(v,0,1);const p=v*(stops.length-1),i=Math.min(stops.length-2,Math.floor(p)),f=p-i,a=hex2rgb(stops[i]),b=hex2rgb(stops[i+1]);return`rgb(${a.map((x,k)=>Math.round(x+(b[k]-x)*f)).join(',')})`;}
+const map={grid:null,job:null};
+function getMP(P,k){return k==='prAll'?mean(P.pr):k==='betaAll'?mean(P.beta):P[k];}
+function setMP(P,k,v){if(k==='prAll')P.pr=Array(NA).fill(v);else if(k==='betaAll')P.beta=Array(NA).fill(v);else P[k]=MAPP[k].int?Math.round(v):v;}
+function buildMap(){
+  const opts=Object.entries(MAPP).map(([k,d])=>`<option value="${k}">${d.label}</option>`).join('');
+  $('#map-x').innerHTML=opts;$('#map-y').innerHTML=opts;$('#map-x').value='freq';$('#map-y').value='vharm';
+  const fix=src=>{const x=$('#map-x'),y=$('#map-y');if(x.value===y.value){const other=Object.keys(MAPP).find(k=>k!==x.value);(src===x?y:x).value=other;}};
+  $('#map-x').addEventListener('change',e=>fix(e.target));$('#map-y').addEventListener('change',e=>fix(e.target));
+  $('#map-go').addEventListener('click',startMap);
+  $('#map-m').addEventListener('change',startMap);
+}
+function startMap(){
+  if(map.job)map.job.cancel=true;
+  const xk=$('#map-x').value,yk=$('#map-y').value,mk=$('#map-m').value,res=+$('#map-res').value,K=+$('#map-k').value,P0=cloneP(st.P);
+  const lin=d=>Array.from({length:res},(_,i)=>d.min+i/(res-1)*(d.max-d.min));
+  const g={xk,yk,mk,res,xs:lin(MAPP[xk]),ys:lin(MAPP[yk]),vals:new Float32Array(res*res).fill(NaN),P0,done:0};
+  map.grid=g;const job={cancel:false};map.job=job;let idx=0;const total=res*res;
+  const step=()=>{if(job.cancel)return;const t0=performance.now();
+    while(idx<total&&performance.now()-t0<28){const iy=Math.floor(idx/res),ix=idx%res,P=cloneP(P0);setMP(P,xk,g.xs[ix]);setMP(P,yk,g.ys[iy]);
+      let acc=0,c=0;for(let k=0;k<K;k++){const sm=summarize(simulate(P,hashSeed(9001,k),false).cnt,P.T);const v=mk==='anx'?sm[1].freq:mk==='calm'?sm[0].freq:sm.timeAnx;if(Number.isFinite(v)){acc+=v;c++;}}
+      g.vals[idx]=c?acc/c:NaN;idx++;}
+    g.done=idx/total;$('#map-prog').style.width=(g.done*100)+'%';if(current==='map')drawMap();
+    if(idx<total)requestAnimationFrame(step);else map.job=null;};
+  requestAnimationFrame(step);
+}
+function drawMap(){
+  const g=map.grid;if(!g)return;const cv=$('#map'),cw=cv.clientWidth||600;
+  const L=64,Rm=14,Tm=10,Bm=52,pw=Math.max(200,cw-L-Rm),ph=clamp(Math.round(pw*.72),220,520),H=ph+Tm+Bm;
+  const{ctx}=setupCanvas(cv,H),box={l:L,r:L+pw,t:Tm,b:Tm+ph},hits=[];
+  const dX=MAPP[g.xk],dY=MAPP[g.yk],stops=RAMPS[g.mk==='calm'?'calm':'anx'][TH.dark?'dark':'light'];
+  const cwid=pw/g.res,chei=ph/g.res;
+  for(let iy=0;iy<g.res;iy++)for(let ix=0;ix<g.res;ix++){const v=g.vals[iy*g.res+ix],x=box.l+ix*cwid,y=box.b-(iy+1)*chei;
+    ctx.fillStyle=Number.isFinite(v)?rampColor(stops,v):TH.sunk;ctx.fillRect(x,y,cwid+.6,chei+.6);
+    hits.push({x,y,w:cwid,h:chei,html:Number.isFinite(v)?`${dX.label} ${dX.f(g.xs[ix])}<br>${dY.label} ${dY.f(g.ys[iy])}<br>${$('#map-m').selectedOptions[0].text}: ${pct(v)}`:'not computed yet'});}
+  const X=v=>box.l+(v-dX.min)/(dX.max-dX.min)*(pw-cwid)+cwid/2,Y=v=>box.b-((v-dY.min)/(dY.max-dY.min)*(ph-chei)+chei/2);
+  ctx.font=`10.5px ${TH.mono}`;ctx.fillStyle=TH.muted;
+  ctx.textAlign='center';ctx.textBaseline='top';for(const v of niceTicks(dX.min,dX.max,5))ctx.fillText(dX.f(v),X(v),box.b+6);
+  ctx.textAlign='right';ctx.textBaseline='middle';for(const v of niceTicks(dY.min,dY.max,5))ctx.fillText(dY.f(v),box.l-7,Y(v));
+  ctx.font=`11.5px ${TH.body}`;ctx.fillStyle=TH.ink2;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(dX.label,(box.l+box.r)/2,box.b+26);
+  ctx.save();ctx.translate(12,(box.t+box.b)/2);ctx.rotate(-Math.PI/2);ctx.textBaseline='middle';ctx.fillText(dY.label,0,0);ctx.restore();
+  const px=getMP(g.P0,g.xk),py=getMP(g.P0,g.yk);
+  if(px>=dX.min&&px<=dX.max&&py>=dY.min&&py<=dY.max){const x=X(px),y=Y(py);ctx.lineWidth=4;ctx.strokeStyle=TH.panel;ctx.beginPath();ctx.arc(x,y,8,0,6.2832);ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle=TH.ink;ctx.stroke();
+    hits.push({x:x-9,y:y-9,w:18,h:18,html:'Playground setting'});}
+  cv._hits=hits;
+  $('#map-legend').innerHTML=`<span>0%</span><span class="bar" style="background:linear-gradient(90deg,${stops.join(',')})"></span><span>100%</span><span>${$('#map-m').selectedOptions[0].text}</span>${g.done<1?`<span>· computing ${Math.round(g.done*100)}%</span>`:''}`;
+}
+
+/* ================= tabs, theme, resize ================= */
+const TABS=['playground','paper','map','model'];let current='playground';
+function showTab(id){
+  if(!TABS.includes(id))id='playground';current=id;hideTip();
+  for(const t of TABS){$('#tab-'+t).setAttribute('aria-selected',String(t===id));$('#panel-'+t).hidden=t!==id;}
+  try{history.replaceState(null,'','#'+id);}catch(e){}
+  renderCurrent();
+}
+function renderCurrent(){
+  if(current==='playground')renderPG();
+  else if(current==='paper'){if(!paper.res)computePaper();renderPaper();}
+  else if(current==='map'){if(!map.grid)startMap();else drawMap();}
+}
+$$('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.id.slice(4))));
+$('.tabs').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const i=TABS.indexOf(current),n=TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];showTab(n);$('#tab-'+n).focus();});
+$('#play').addEventListener('click',togglePlay);
+$$('[data-sim]').forEach(sel=>sel.addEventListener('change',()=>{const k=+sel.dataset.sim;paper.n[k]=+sel.value;computeSim(k);renderSim(k);}));
+$$('[data-rerun]').forEach(b=>b.addEventListener('click',()=>{const k=+b.dataset.rerun;paper.seed[k]=Math.floor(Math.random()*1e6);computeSim(k);renderSim(k);}));
+$('#s3-zeros').addEventListener('change',()=>{if(paper.res)renderSim(3);});
+$('[data-ex]').addEventListener('click',()=>{paper.ex=Math.floor(Math.random()*999999);computeSim(0);renderSim(0);});
+for(const mcv of[$('#montage'),$('#montage2')]){
+  mcv.addEventListener('pointermove',e=>{const g=st.geo;if(!g)return;const r=mcv.getBoundingClientRect(),t=Math.floor((e.clientX-r.left-g.L)/g.dx);const nt=t>=0&&t<uptoNow()?t:null;if(nt!==st.hoverT){st.hoverT=nt;drawMontage();updateReadout();}});
+  mcv.addEventListener('pointerleave',()=>{st.hoverT=null;drawMontage();updateReadout();});
+}
+['#bars-calm','#bars-anx','#s1-lo','#s1-hi','#s1-box','#s2-bars','#s2-freq','#s2-val','#s3-cost','#s3-assoc','#map'].forEach(s=>attachHits($(s)));
+const retheme=()=>{readTheme();renderCurrent();};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',retheme);
+new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+let rz=null;new ResizeObserver(()=>{clearTimeout(rz);rz=setTimeout(renderCurrent,60);}).observe($('.wrap'));
+
+readTheme();buildRack();buildMap();syncRack();
+st.runP=cloneP(st.P);st.run=simulate(st.runP,st.P.seed,true);
+updateReadout();
+showTab((location.hash||'').slice(1)||'playground');
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{readTheme();renderCurrent();});
+window.__ritual={simulate,summarize,runGroup,cloneP,DEFAULTS,betaS,gauss,mulberry32,hashSeed};
+})();
+</script>
+</body>
+</html>
