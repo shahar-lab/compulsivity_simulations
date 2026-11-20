@@ -2,6 +2,8 @@
 
 Computational model of compulsive ritual formation, implemented as an Advantage Actor-Critic (AAC) reinforcement learning agent.
 
+For an interactive illustration of the model and the paper's simulations, see the [online dashboard](https://shahar-lab.github.io/compulsivity_simulations/).
+
 ## Model
 
 **File:** `model/advantage_actor_critic.R`  
